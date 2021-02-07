@@ -5,8 +5,9 @@ footer = html.Footer([
 
         html.Div(
                 html.Div([
-                html.A("Home", href="/", className="footer-navlink", id="footer-data"),
-                html.A("Model", href="/model", className="footer-navlink", id="footer-vaccine-data"),
+                        html.A("Home", href="/", className="footer-navlink"),
+                        html.A("Model", href="/model", className="footer-navlink"),
+                        html.A("Data", href="/data", className="footer-navlink"),
                 ],
                 className="footer-wrapper footer-link-cont",
                 ),

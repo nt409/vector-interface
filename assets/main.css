@@ -2,23 +2,23 @@
 /* utility classes (general styling) */
 /* header */
 /* footer */
+/* Home */
+/* Model page */
 /* media queries (resize for different devices) */
 
 @charset "UTF-8";
 
 :root {
-  --primary: #295939;
-  --secondary: #E9B0DF;
-  --tertiary: #adeecf;
-  --dark-grey: #303131;
+  --secondary: #ecf4ff;
+  --bkgd: rgb(255, 255, 255);
   --txt-grey: #6d6d6d;
   --link-grey: rgb(80, 80, 80);
 }
 
 
 body {
-    font-family: sans-serif;
-    background-color: #fff;
+    font-family: 'Google+Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--bkgd);
     text-align: left;
     color: #444;
     line-height: 1.6;
@@ -27,6 +27,10 @@ body {
 
 h1, h2, h3, h4 {
     line-height: 1.2;
+}
+
+p {
+    font-family: 'Google+Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 
@@ -46,21 +50,43 @@ h1, h2, h3, h4 {
     justify-content: space-between;
 }
 
+.page-contents {
+    margin: 40px 0 50px;
+    min-height: 400px;
+}
+
+.page-404 {
+    margin: 50px 0 500px;
+}
+
+
+.page-title {
+    margin: 0.7em 0;
+}
+
+
+
+
+
+
 /* header */
 
 .navLinkTitle {
     color: black;
     font-size: 1.3em;
+    padding: 15px 10px;
+    margin-left: -10px;
 }
 
 .navLink {
     color: var(--link-grey);
-    padding: 10px 10px;
+    padding: 15px 10px;
 }
 
 .navlink-mb {
     margin-left: 10px;
     margin-right: 10px;
+    padding: 10px 10px;
     font-size: 0.9em;
 }
 
@@ -68,14 +94,11 @@ h1, h2, h3, h4 {
 .website-name {
     grid-row: 1;
     grid-column: 1;
-
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-top: 7px;
 
     text-align: left;
     justify-self: left;
     padding-left: 0;
-    margin-left: 0;
 }
 
 #menu-button {
@@ -91,7 +114,7 @@ h1, h2, h3, h4 {
 }
 
 #nav-menu {
-    background-color: #eee;
+    background-color: var(--secondary);
     margin: -10px 0 10px;
     padding: 5px 0;
 }
@@ -151,11 +174,11 @@ h1, h2, h3, h4 {
 
 .footer-link-cont {
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: auto auto auto;
 }
 
 .footer-links {
-    background-color: #eee;
+    background-color: var(--secondary);
     padding: 10px 0;
 }
 
@@ -171,6 +194,67 @@ footer {
     width: 100%;
 }
 
+/* Home */
+
+.home-title {
+    margin-top: 50px;
+    font-size: 3em;
+    text-align: center;
+}
+
+.home-subtitle {
+    margin-top: 0.5em;
+    font-weight: 100;
+    text-align: center;
+}
+
+.home-logo {
+    width: 200px;
+    margin: 50px auto;
+}
+
+
+/* Model page */
+
+.controls {
+    background-color: var(--secondary);
+    border-radius: 5px;
+    padding: 10px;
+    margin: 0 0 50px;
+}
+
+.uppercase-title {
+    font-weight: 200;
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    margin: 15px 0 25px;
+}
+
+.control-label {
+    color: var(--txt-grey);
+    font-weight: 400;
+    font-size: 0.8em;
+    margin: 0;
+}
+
+.control-wrapper {
+    margin: 20px 0;
+}
+
+.model-page {
+    display: grid;
+    grid-template-columns: auto;
+}
+
+.figure-cont {
+    background-color: var(--secondary);
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* #model-fig-title {
+    margin: 15px 0 25px;
+} */
 
 
 
@@ -197,9 +281,47 @@ footer {
         max-width: 900px;
     }
 
+    .home-cont {
+        display: grid;
+        margin-top: 100px;
+        grid-template-columns: auto auto;
+        grid-template-rows: auto auto;
+        justify-content: space-around;
+    }
+
+    .home-title {
+        grid-column: 1;
+        grid-row: 1;
+        width: 550px;
+        /* margin-top: 0.2em; */
+        text-align: left;
+    }
+
+    .home-subtitle {
+        grid-column: 1;
+        grid-row: 2;
+        /* margin-top: 0.1em; */
+        text-align: left;
+    }
+    
+    .home-logo {
+        grid-row-start: 1;
+        grid-row-end: 3;
+        grid-column: 2;
+        align-self: end;
+        /* justify-self: center; */
+        margin: 0;
+    }
+
+    .model-page {
+        grid-template-columns: 300px auto;
+        grid-gap: 30px;
+        align-content: start;
+    }
+
 }
 
-@media only screen and (min-width: 1024px){
+@media only screen and (min-width: 1300px){
     /* add styles for large desktop */
 
     .wrapper, .header-wrapper, .footer-wrapper {

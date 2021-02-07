@@ -11,9 +11,15 @@ from gevent.pywsgi import WSGIServer
 from flask import Flask
 
 
-from header import header
-from footer import footer
+from components.header import header
+from components.footer import footer
 
+from components.page_home import home_page
+from components.page_model import model_page
+from components.page_data import data_page
+from components.page_not_found import page_404
+
+from utils.figures import model_fig
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -43,10 +49,6 @@ app.layout = html.Div([
         )
 
 
-
-
-
-
 ########################################################################################################################
 # edit meta below so search engines can find
 # add analytics into head
@@ -61,6 +63,7 @@ app.index_string = """<!DOCTYPE html>
 
         {%metas%}
         <title>MyWebsiteName</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans">
         <link rel="icon" href="assets/favicon.ico">
         {%css%}
         
@@ -86,11 +89,13 @@ app.index_string = """<!DOCTYPE html>
             [Input('page-url', 'pathname')])
 def display_page(pathname):
     if pathname == '/model':
-        return html.Div("model")
+        return model_page
+    elif pathname == '/data':
+        return data_page
     elif pathname == '/':
-        return html.Div("home")
+        return home_page
     else:
-        return html.Div('404: Page not found',style={'height': '100vh'})
+        return page_404
 
 
 # collapse
@@ -111,6 +116,36 @@ for id_name, activator in zip(["nav-menu"],
         [State(id_name, "is_open")],
     )(toggle)
 
+
+
+
+@app.callback([
+                Output("model-fig", "figure"),
+                Output("model-fig-title", "children"),
+            ],
+            [
+                Input('date-picker', 'date'),
+                Input('checklist', 'value'),
+                Input('slider', 'value'),
+            ])
+def model_callback(params, checklist, slider):
+    
+    x = [1]
+    y = [1]
+    
+    if "in-red" in checklist:
+        clr = "red"
+    else:
+        clr = "black"
+    
+    fig = model_fig(x, y, clr, slider)
+    
+    if "contains-date" in checklist:
+        title =f"ylab on {str(params)}"
+    else:
+        title =f"ylab"
+    
+    return [fig, title]
 
 ########################################################################################################################
 if __name__ == '__main__':

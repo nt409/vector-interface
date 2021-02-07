@@ -4,19 +4,12 @@ import dash_html_components as html
 
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
-from dash.exceptions import PreventUpdate
+# from dash.exceptions import PreventUpdate
 
 from gevent.pywsgi import WSGIServer
 
 from flask import Flask
 
-# from math import ceil, exp
-# import numpy as np
-# import plotly.graph_objects as go
-
-# import copy
-# import datetime
-# import json
 
 from header import header
 from footer import footer
@@ -109,29 +102,8 @@ def toggle(n, is_open):
 
 
 ########################################################################################################################
-# popovers
-
-
-# for p in ["control", "months-control", "vaccination",  "cc-care" , "inf-rate", "inf-tab", "cont-tab", "example","red-deaths","ICU","herd", 'cycles-off', 'cycles-on', 'groups-allowed']: # "res-type" , "pick-strat",
-#     app.callback(
-#         Output(f"popover-{p}", "is_open"),
-#         [Input(f"popover-{p}-target", "n_clicks")
-#         ],
-#         [State(f"popover-{p}", "is_open")],
-#     )(toggle)
-
-for id_name, activator in zip([
-            # "modelling-menu-mb",
-            # "data-menu-mb",
-            # "modelling-menu-dt",
-            # "data-menu-dt",
-            "nav-menu"],
-            [
-            # "down-arrow-model-mb",
-            # "down-arrow-mb",
-            # "down-arrow-model-dt",
-            # "down-arrow-data-dt",
-            "menu-button"]):
+for id_name, activator in zip(["nav-menu"],
+                                ["menu-button"]):
 
     app.callback(Output(id_name, "is_open"),
         [Input(activator, "n_clicks")

@@ -99,6 +99,11 @@ Briefly, the most important things (in his opinion) are:
 
  The video linked is a particularly good introduction to html and CSS. When writing dash apps you are effectively using a python wrapper to write html (strictly speaking it actually compiles into html via React.js...). The details of this aren't particulary important but if you can write dash then you can basically write html and vice versa.
 
+ The CSS I used is also designed to make the website **responsive**, which means it presents nicely on mobiles and desktops (rather than responds to user interactions). Typically best to design for a mobile and then tweak for a desktop, since easier to spread things out then cram them in. 
+
+- Mobiles - usually design in  one column
+- Desktops - can expand to 2/3 columns when needed
+
 ---
 
 ## Deploy via Heroku

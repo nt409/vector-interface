@@ -252,6 +252,11 @@ footer {
     padding: 10px;
 }
 
+.SingleDatePicker_picker {
+    z-index: 2;
+    /* make sure visible above other elements */
+}
+
 /* #model-fig-title {
     margin: 15px 0 25px;
 } */

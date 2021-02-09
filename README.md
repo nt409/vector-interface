@@ -1,5 +1,9 @@
 # Dash app template for scientific projects
 
+A version of this template app is currently live [here](https://plant-dash-app.herokuapp.com/)
+
+---
+
 ## TOC
 - Setup
 - Useful libraries

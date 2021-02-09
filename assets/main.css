@@ -51,8 +51,8 @@ p {
 }
 
 .page-contents {
-    margin: 40px 0 50px;
-    min-height: 400px;
+    padding: 40px 0 50px;
+    min-height: calc(100vh - 180px);
 }
 
 .page-404 {
@@ -209,7 +209,7 @@ footer {
 }
 
 .home-logo {
-    width: 200px;
+    width: 180px;
     margin: 50px auto;
 }
 
@@ -317,6 +317,10 @@ footer {
         grid-template-columns: 300px auto;
         grid-gap: 30px;
         align-content: start;
+    }
+
+    .page-contents {
+        padding: 30px 0 120px;
     }
 
 }

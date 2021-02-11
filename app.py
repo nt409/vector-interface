@@ -151,6 +151,6 @@ def model_callback(params, checklist, slider):
 if __name__ == '__main__':
     # False for production, True for development
     # should use a .env file or similar really, so that this is always correct
-    WILL_DEBUG = True
+    WILL_DEBUG = False
 
     app.run_server(debug=WILL_DEBUG)

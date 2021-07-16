@@ -6,20 +6,13 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 # from dash.exceptions import PreventUpdate
 
-from gevent.pywsgi import WSGIServer
-
-from flask import Flask
-
+# from gevent.pywsgi import WSGIServer
+# from flask import Flask
 
 from components.header import header
 from components.footer import footer
 
-from components.page_home import home_page
-from components.page_model import model_page
-from components.page_data import data_page
-from components.page_not_found import page_404
-
-from utils.figures import model_fig
+from utils.utils import retrieve_page, model_callback, toggle_open
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -34,9 +27,8 @@ app.config.suppress_callback_exceptions = True
 
 ########################################################################################################################
 
-
 app.layout = html.Div([
-        
+
         header,
 
         dcc.Location(id='page-url', refresh=False),
@@ -58,11 +50,11 @@ app.index_string = """<!DOCTYPE html>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <meta name="MyWebsiteName" 
-        content="Something about what my website does">
+        <meta name="Vector Paper" 
+        content="Mathemtical model of vector/host interactions">
 
         {%metas%}
-        <title>MyWebsiteName</title>
+        <title>Vector Paper</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans">
         <link rel="icon" href="assets/favicon.ico">
         {%css%}
@@ -79,73 +71,34 @@ app.index_string = """<!DOCTYPE html>
 </html>"""
 
 
-
-
-
 ########################################################################################################################
 # callbacks
 
-@app.callback(Output('page-content', 'children'),
-            [Input('page-url', 'pathname')])
-def display_page(pathname):
-    # if pathname == '/':
-        # return model_page
-    if pathname == '/explanation':
-        return data_page
-    elif pathname == '/':
-        return model_page
-    else:
-        return page_404
+# display page depending on url
+app.callback(Output('page-content', 'children'),
+            [Input('page-url', 'pathname')])(retrieve_page)
 
 
-# collapse
-def toggle(n, is_open):
-    if n:
-        return not is_open
-    return is_open
-
-
-
-########################################################################################################################
+# toggle open/close menus and navs
 for id_name, activator in zip(["nav-menu"],
                                 ["menu-button"]):
 
     app.callback(Output(id_name, "is_open"),
-        [Input(activator, "n_clicks")
-        ],
+        [Input(activator, "n_clicks")],
         [State(id_name, "is_open")],
-    )(toggle)
+    )(toggle_open)
 
 
-
-
-@app.callback([
+# run model
+app.callback([
                 Output("model-fig", "figure"),
                 Output("model-fig-title", "children"),
             ],
             [
-                Input('date-picker', 'date'),
                 Input('checklist', 'value'),
                 Input('slider', 'value'),
-            ])
-def model_callback(params, checklist, slider):
-    
-    x = [1]
-    y = [1]
-    
-    if "in-red" in checklist:
-        clr = "red"
-    else:
-        clr = "black"
-    
-    fig = model_fig(x, y, clr, slider)
-    
-    if "contains-date" in checklist:
-        title =f"ylab on {str(params)}"
-    else:
-        title =f"ylab"
-    
-    return [fig, title]
+            ]
+            )(model_callback)
 
 ########################################################################################################################
 if __name__ == '__main__':

@@ -2,9 +2,6 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 
-import datetime
-
-from dash_html_components.H4 import H4
 from utils.figures import MODEBAR_CONFIG
 
 
@@ -17,8 +14,7 @@ model_controls = html.Div([
                 
                 dbc.Checklist(
                     id='checklist',
-                    options=[{'label': "Title contains date?", 'value': 'contains-date'},
-                            {'label': "Plot in red?", 'value': 'in-red'}],
+                    options=[{'label': "Plot in red?", 'value': 'in-red'}],
                     value=[],
                     className="checklist-top",
                 ),
@@ -61,7 +57,7 @@ model_page =  html.Div(
         model_controls,
 
         html.Div([
-        html.H4("", id="model-fig-title", className="uppercase-title"),
+        html.H4(" ", id="model-fig-title", className="uppercase-title"),
         html.Div(dcc.Graph(id='model-fig',
             config = MODEBAR_CONFIG
             ))

@@ -13,20 +13,6 @@ model_controls = html.Div([
         html.H4("Controls", className="uppercase-title"),
 
         html.Div([
-                html.P("Date", className="control-label"),
-                dcc.DatePickerSingle(
-                    id='date-picker',
-                    # min_date_allowed=datetime.date(2020, 1, 22),
-                    # max_date_allowed=datetime.date(2022, 1, 1),
-                    initial_visible_month=datetime.date.today(),
-                    date=datetime.date.today(),
-                    display_format='D-MMM-YYYY',
-                ),
-        ],
-        className="control-wrapper"
-        ),
-
-        html.Div([
                 html.P("Checklist", className="control-label"),
                 
                 dbc.Checklist(
@@ -66,7 +52,7 @@ model_controls = html.Div([
 model_page =  html.Div(
     [
     html.H1(
-    "Model page",
+    "Model outputs",
     className="page-title"
     ),
 

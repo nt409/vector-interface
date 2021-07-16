@@ -88,12 +88,12 @@ app.index_string = """<!DOCTYPE html>
 @app.callback(Output('page-content', 'children'),
             [Input('page-url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/model':
-        return model_page
-    elif pathname == '/data':
+    # if pathname == '/':
+        # return model_page
+    if pathname == '/explanation':
         return data_page
     elif pathname == '/':
-        return home_page
+        return model_page
     else:
         return page_404
 
@@ -151,6 +151,6 @@ def model_callback(params, checklist, slider):
 if __name__ == '__main__':
     # False for production, True for development
     # should use a .env file or similar really, so that this is always correct
-    WILL_DEBUG = False
+    DEBUG = True
 
-    app.run_server(debug=WILL_DEBUG)
+    app.run_server(debug=DEBUG)

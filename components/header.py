@@ -3,12 +3,6 @@ import dash_bootstrap_components as dbc
 
 
 header = html.Header(html.Div([
-            html.Div([
-                html.A("MyWebsiteName", href="/", className="navLinkTitle"),
-            ],
-            className="website-name",
-            ),
-
             html.Div(
                 html.Img(src='/assets/images/menu.svg',id="hamburger"),
                 id="menu-button",
@@ -20,8 +14,8 @@ header = html.Header(html.Div([
                     children=[
                             html.Div([
                                 dbc.Collapse([
-                                    html.Div(html.A("Data", href="/data", className="navLink navlink-mb")),
-                                    html.Div(html.A("Model", href="/model", className="navLink navlink-mb")),
+                                    html.Div(html.A("Model", href="/", className="navLink navlink-mb")),
+                                    html.Div(html.A("Explanation", href="/explanation", className="navLink navlink-mb")),
                                 ],
                                 id="nav-menu",
                                 is_open=False),
@@ -31,8 +25,8 @@ header = html.Header(html.Div([
                             ),
                             
                             html.Div([
-                                html.Div(html.A("Data", href="/data", className="navLink")),
-                                html.Div(html.A("Model", href="/model", className="navLink rightmost-link")),
+                                html.Div(html.A("Model", href="/", className="navLink")),
+                                html.Div(html.A("Explanation", href="/explanation", className="navLink rightmost-link")),
                             ],
                             className="desktop-links show-desktop hide-mobile",
                             ),

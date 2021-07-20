@@ -22,5 +22,4 @@ footer = html.Footer([
         ),
         
         ],
-        
         )

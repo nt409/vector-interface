@@ -23,19 +23,25 @@ def toggle_open(n, is_open):
     return is_open
 
 
+def toggle_visible(radio):
+    if radio=="C":
+        return [""]
+    else:
+        return ["invisible"]
+
+
+
 def model_callback(*params):
-    print(params)
     
-    slider = 8
-    checklist = []
+    radio = params[0]
+    slider = params[2]
+
+    print(params)
     
     x = [1]
     y = [1]
     
-    if "in-red" in checklist:
-        clr = "red"
-    else:
-        clr = "black"
+    clr = "black"
     
     fig = model_fig(x, y, clr, slider)
     

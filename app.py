@@ -11,8 +11,10 @@ import dash_bootstrap_components as dbc
 
 from components.header import header
 from components.footer import footer
+from components.pg_model import slider_list
 
-from utils.utils import retrieve_page, model_callback, toggle_open
+
+from utils.utils import retrieve_page, model_callback, toggle_open, toggle_visible
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -80,9 +82,10 @@ app.callback(Output('page-content', 'children'),
 
 
 # toggle open/close menus and navs
-for id_name, activator in zip(["nav-menu"],
-                                ["menu-button"]):
+ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,5)]
+acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,5)]
 
+for id_name, activator in zip(ids,acts):
     app.callback(Output(id_name, "is_open"),
         [Input(activator, "n_clicks")],
         [State(id_name, "is_open")],
@@ -94,11 +97,14 @@ app.callback([
                 Output("model-fig", "figure"),
                 Output("model-fig-title", "children"),
             ],
-            [
-                Input('checklist', 'value'),
-                Input('slider', 'value'),
-            ]
+            [Input('param-choice', 'value')]
+            + [Input(f"slider-{x['var']}", 'value') for x in slider_list]
             )(model_callback)
+
+# make params invisible
+app.callback([Output("custom-params", "className"),
+        Input('param-choice', 'value'),
+        ])(toggle_visible)
 
 ########################################################################################################################
 if __name__ == '__main__':

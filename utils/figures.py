@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
-import numpy as np
+# import numpy as np
+from math import ceil
 
 
 # all possible modebar buttons:
@@ -55,10 +56,13 @@ def standard_layout(legend_on):
             margin= dict(l=50, b=10, t=10, r=10, pad=0),
             )
 
-def model_fig(x, y, clr, n_points):
+def model_fig(x, y, clr, n):
     traces = []
-    x = np.random.normal(size=n_points)
-    y = np.random.normal(size=n_points)
+
+    n_points = ceil(n)
+    
+    x = list(range(n_points))
+    y = list(range(n_points))
 
     points = go.Scatter(x=x,
             y=y,

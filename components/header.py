@@ -14,8 +14,8 @@ header = html.Header(html.Div([
                     children=[
                             html.Div([
                                 dbc.Collapse([
-                                    html.Div(html.A("Model", href="/", className="navLink navlink-mb")),
-                                    html.Div(html.A("Explanation", href="/explanation", className="navLink navlink-mb")),
+                                    html.Div(html.A("Model", href="/", className="navLink-mb")),
+                                    html.Div(html.A("Explanation", href="/explanation", className="navLink-mb")),
                                 ],
                                 id="nav-menu",
                                 is_open=False),

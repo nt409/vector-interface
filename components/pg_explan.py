@@ -22,27 +22,12 @@ explan_page =  html.Div(
     html.Div([
         
     html.P("Longer description to go here (Figure 1)."),
+    
+    html.P("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."),
 
     html.Img(src="/assets/images/Fig_One.png",
         className="image"),
-    
-    html.Img(src="/assets/images/Fig_one.png",
-        className="image"),
-    
-    html.Img(src="/assets/images/down_icon.svg"),
 
-    html.Div(
-    html.Img(src="/assets/images/down_icon.svg",
-        className="image"),
-            ),
-
-
-    html.Div(
-        html.Img(src="/assets/images/Fig_One.png",
-            className="image"),
-        # className=""
-        ),
-    
 
     html.Div(
         [

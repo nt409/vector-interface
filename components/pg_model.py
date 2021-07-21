@@ -37,7 +37,10 @@ sliders = [html.Div([
                         value=x['value'],
                         marks={i: f'{i}' for i in [x['min'], x['max']]},
                         id=f"slider-{x['var']}",
-                        tooltip = { 'always_visible': True, 'placement': 'bottom'}
+                        tooltip = {
+                            'always_visible': False,
+                            'placement': "bottom",
+                            }
                     )
                 ],
                 className="control-wrapper"

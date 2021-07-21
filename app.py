@@ -4,10 +4,6 @@ import dash_html_components as html
 
 from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
-# from dash.exceptions import PreventUpdate
-
-# from gevent.pywsgi import WSGIServer
-# from flask import Flask
 
 from components.header import header
 from components.footer import footer
@@ -78,7 +74,8 @@ app.index_string = """<!DOCTYPE html>
 
 # display page depending on url
 app.callback(Output('page-content', 'children'),
-            [Input('page-url', 'pathname')])(retrieve_page)
+            [Input('page-url', 'pathname')]
+            )(retrieve_page)
 
 
 # toggle open/close menus and navs
@@ -102,11 +99,13 @@ app.callback([
             )(model_callback)
 
 # make params invisible
-app.callback([Output("custom-params", "className"),
-        Input('param-choice', 'value'),
-        ])(toggle_visible)
+app.callback([Output("custom-params", "className")],
+    [Input('param-choice', 'value')],
+    )(toggle_visible)
 
-########################################################################################################################
+
+
+
 if __name__ == '__main__':
     # False for production, True for development
     # should use a .env file or similar really, so that this is always correct

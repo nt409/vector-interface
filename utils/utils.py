@@ -1,4 +1,4 @@
-# add some functions if you have a model that calculates something!
+# callbacks and model fns
 
 from components.pg_model import model_page
 from components.pg_explan import explan_page
@@ -9,10 +9,10 @@ from utils.figures import model_fig
 
 
 def retrieve_page(pathname):
-    if pathname == '/explanation':
-        return explan_page
-    elif pathname == '/':
+    if pathname == '/':
         return model_page
+    elif pathname == '/explanation':
+        return explan_page
     else:
         return page_404
 

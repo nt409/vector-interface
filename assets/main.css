@@ -60,6 +60,7 @@ p {
 
 .page-404 {
     margin: 50px 0 500px;
+    text-transform: uppercase;
 }
 
 .page-title {
@@ -75,6 +76,7 @@ p {
 
 .invisible {
     display: none;
+    /* visibility: hidden; */
 }
 
 .emph-line {

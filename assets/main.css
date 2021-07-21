@@ -11,7 +11,7 @@
 :root {
   --bkgd: #ffffff;
   --primary: #295939;
-  --secondary: #e2ffd6;
+  --secondary: #ecf7e9;
   --bkgd-grey: #444;
   --light-opacity: rgba(0,0,0,0.04);
   --dark-opacity: rgba(0,0,0,0.08);
@@ -340,6 +340,7 @@ footer {
 
 
 
+
 /* Media Queries - 768 for tablets, 1024 for desktop, 1300ish for large desktop */
 @media only screen and (min-width: 1024px){
     /* add styles for desktop */
@@ -396,7 +397,7 @@ footer {
     }
 
     .model-page {
-        grid-template-columns: 300px auto;
+        grid-template-columns: 335px auto;
         grid-gap: 30px;
         align-content: start;
     }
@@ -413,6 +414,5 @@ footer {
     .wrapper, .header-wrapper, .footer-wrapper {
         max-width: 1200px;
     }
-
 
 }

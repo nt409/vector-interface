@@ -48,7 +48,7 @@ app.index_string = """<!DOCTYPE html>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <meta name="Vector Paper" 
+        <meta name="Plant disease vector preference model" 
         content="Mathemtical model of vector/host interactions">
 
         {%metas%}
@@ -79,8 +79,8 @@ app.callback(Output('page-content', 'children'),
 
 
 # toggle open/close menus and navs
-ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,5)]
-acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,5)]
+ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,6)]
+acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,6)]
 
 for id_name, activator in zip(ids,acts):
     app.callback(Output(id_name, "is_open"),

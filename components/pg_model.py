@@ -11,7 +11,7 @@ slider_list = [dict(step=10, min=0, max=2000, value=1000, var='N', name='N: numb
                 dict(step=0.01, min=0, max=1, value=0.12, var='alpha', name=u'\u03B1: vector death due to flights'),
                 dict(step=0.1, min=0, max=10, value=4, var='tau', name=u'\u03C4: vectors losing infectivity'),
                 dict(step=0.01, min=0, max=1, value=0.18, var='sigma', name=u'\u03C3: per capita vector birth rate (at low density)'),
-                # dict(step=0.1, min=0, max=2200, value=1977.6, var='zeta', name=u'\u03B6: vector population density dependent threshold'),
+                dict(step=0.1, min=0, max=2200, value=1977.6, var='zeta', name=u'\u03B6: vector population density dependent threshold'),
                 dict(step=0.1, min=0, max=4, value=2, var='Gamma', name=u'\u0393: average time feeding per settled landing'),
                 dict(step=0.1, min=0, max=1, value=0, var='delta', name=u'\u03B4: increase in death rate as more plants visited per feed'),
                 dict(step=0.1, min=0, max=3, value=1, var='beta', name=u'\u03B2: change in birth rate on infected plants'),
@@ -23,6 +23,10 @@ slider_list = [dict(step=10, min=0, max=2000, value=1000, var='N', name='N: numb
                 dict(step=0.1, min=0, max=1, value=2, var='epsilon plus', name=u'\u03B5\u208A: bias of viruliferous vector to feed on infected plant'),
                 dict(step=0.1, min=0, max=1, value=1, var='gamma', name=u'\u03B3: probability that uninfected plant is inoculated by viruliferous vector on single visit'),
                 dict(step=0.1, min=0, max=1, value=1, var='eta', name=u'\u03B7: probability non-viruliferous vector acquires virus in single visit to infected plant'),
+                dict(step=0.1, min=0, max=1, value=0.1, var='S0', name=u'S\u2080: susceptible host'),
+                dict(step=0.1, min=0, max=1, value=0.1, var='I0', name=u'I\u2080: infected host'),
+                dict(step=0.1, min=0, max=1, value=0.1, var='X0', name=u'X\u2080: nonviruliferous vector'),
+                dict(step=0.1, min=0, max=1, value=0.1, var='Z0', name=u'Z\u2080: viruliferous vector'),
                 ]
 
 
@@ -46,6 +50,8 @@ sliders = [html.Div([
                 className="control-wrapper"
                     ) for x in slider_list]
 
+
+
 PT_or_not = html.Div([
             
             html.P("Type of transmission", className="control-label"),
@@ -65,6 +71,29 @@ PT_or_not = html.Div([
             )
 
 
+def param_group(title, index, *controls):
+    return html.Div([
+                html.Div([
+                    html.H4(title, className="control-collapse-title"),
+                    html.Div(
+                        html.Img(src='/assets/images/down_icon.svg',
+                        className="down-arrow"
+                        )),
+                    ],
+                    id=f"sld-bt-{index}", 
+                    className="text-with-arrow"),
+                
+                dbc.Collapse(
+                    controls,
+                    id=f"sld-gp-{index}",
+                    is_open=False)
+                ])
+
+pg1 = param_group("Host parameters", 1, *sliders[:3])
+pg2 = param_group("Vector parameters", 2, *sliders[3:10])
+pg3 = param_group("Preference parameters", 3, *sliders[10:16])
+pg4 = param_group("Transmission parameters", 4, *sliders[16:18])
+pg5 = param_group("Initial conditions", 5, *sliders[18:])
 
 custom_params = html.Div(
         id="custom-params",
@@ -75,77 +104,12 @@ custom_params = html.Div(
             html.H4("Custom parameters", className="uppercase-title"),
 
             PT_or_not,
-            
-            html.Div([
-                html.H4("Host parameters", className="control-collapse-title"),
-                html.Div(
-                    html.Img(src='/assets/images/down_icon.svg',
-                    className="down-arrow"
-                    )),
-            ],
-            id="sld-bt-1", 
-            className="text-with-arrow"),
-            
-            dbc.Collapse([    
-                *sliders[:3],
-                ],
-                id="sld-gp-1",
-                is_open=False),
 
-            html.Div([
-                html.H4("Vector parameters", className="control-collapse-title"),
-                html.Div(
-                    html.Img(src='/assets/images/down_icon.svg',
-                    className="down-arrow"
-                    )),
-            ],
-            id="sld-bt-2", 
-            className="text-with-arrow"),
-
-                        
-            dbc.Collapse([    
-                *sliders[3:9],
-                ],
-                id="sld-gp-2",
-                is_open=False),
-            
-            
-            
-            html.Div([
-                html.H4("Preference parameters", className="control-collapse-title"),
-                html.Div(
-                    html.Img(src='/assets/images/down_icon.svg',
-                    className="down-arrow"
-                    )),
-            ],
-            id="sld-bt-3", 
-            className="text-with-arrow"),
-
-                        
-            dbc.Collapse([    
-                *sliders[9:15],
-                ],
-                id="sld-gp-3",
-                is_open=False),
-            
-            
-            html.Div([
-                html.H4("Transmission parameters", className="control-collapse-title"),
-                html.Div(
-                    html.Img(src='/assets/images/down_icon.svg',
-                    className="down-arrow"
-                    )),
-            ],
-            id="sld-bt-4", 
-            className="text-with-arrow"),
-
-                        
-            dbc.Collapse([    
-                *sliders[15:],
-                ],
-                id="sld-gp-4",
-                is_open=False),
-
+            pg1,
+            pg2,
+            pg3,
+            pg4,
+            pg5,
 
         ])
 

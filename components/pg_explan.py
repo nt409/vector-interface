@@ -25,6 +25,8 @@ explan_page =  html.Div(
 
 
     html.Img(src="assets/images/Fig_one.png", className="image"),
+    
+    html.Img(src="Fig_one.png", className="image"),
 
     html.Div(
         [

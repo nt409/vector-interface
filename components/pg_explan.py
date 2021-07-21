@@ -24,9 +24,9 @@ explan_page =  html.Div(
     html.P("Longer description to go here (Figure 1)."),
 
 
-    html.Img(src="assets/images/Fig_one.png", className="image"),
+    html.Img(src="/assets/images/Fig_one.png", className="image"),
     
-    html.Img(src="Fig_one.png", className="image"),
+    # html.Img(src="Fig_one.png", className="image"),
 
     html.Div(
         [

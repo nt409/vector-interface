@@ -95,6 +95,7 @@ app.callback([
                 Output("model-fig-title", "children"),
             ],
             [Input('param-choice', 'value')]
+            + [Input('persistent-choice', 'value')]
             + [Input(f"slider-{x['var']}", 'value') for x in slider_list]
             )(model_callback)
 

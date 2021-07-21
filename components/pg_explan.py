@@ -23,8 +23,23 @@ explan_page =  html.Div(
         
     html.P("Longer description to go here (Figure 1)."),
 
+    html.Img(src="/assets/images/Fig_one.png",
+        className="image"),
+    
+    html.Img(src="/assets/images/down_icon.svg"),
 
-    html.Img(src="/assets/images/Fig_one.png", className="image"),
+    html.Div(
+    html.Img(src="/assets/images/down_icon.svg",
+        className="image"),
+            ),
+
+
+    html.Div(
+        html.Img(src="/assets/images/Fig_one.png",
+            className="image"),
+        # className=""
+        ),
+    
 
     html.Div(
         [

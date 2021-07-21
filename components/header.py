@@ -4,7 +4,8 @@ import dash_bootstrap_components as dbc
 
 header = html.Header(html.Div([
             html.Div(
-                html.Img(src='/assets/images/menu.svg',id="hamburger"),
+                html.Img(src='/assets/images/menu.svg',
+                    id="hamburger"),
                 id="menu-button",
                 className="hide-desktop"),
 

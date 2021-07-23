@@ -7,10 +7,11 @@ import dash_bootstrap_components as dbc
 
 from components.header import header
 from components.footer import footer
-from components.pg_model import slider_list
+from components.helper_fns import slider_list
 
 
-from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible
+from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
+    par_scan_callback
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -77,8 +78,8 @@ app.callback(Output('page-content', 'children'),
 
 
 # toggle open/close menus and navs
-ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,6)]
-acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,6)]
+ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,6)] + [f"ps-sld-gp-{x}" for x in range(1,6)]
+acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,6)] + [f"ps-sld-bt-{x}" for x in range(1,6)]
 
 for id_name, activator in zip(ids,acts):
     app.callback(Output(id_name, "is_open"),
@@ -87,23 +88,37 @@ for id_name, activator in zip(ids,acts):
     )(toggle_open)
 
 
+
+# make params invisible
+ids = ["custom-params", "ps-custom-params"]
+acts = ["param-choice", "ps-param-choice"]
+
+for id_name, activator in zip(ids, acts):
+    app.callback([Output(id_name, "className")],
+        [Input(activator, "value")],
+        )(toggle_visible)
+    
 # run model
 app.callback([Output("host-fig", "figure"),
               Output("vector-fig", "figure"),
               Output("incidence-fig", "figure"),
               Output("eqm-table-cont", "children"),
               Output("R0-k-table-cont", "children"),
+              Output("loading-m", "children"),
             ],
             [Input('param-choice', 'value')]
             + [Input('persistent-choice', 'value')]
             + [Input(f"slider-{x['var']}", 'value') for x in slider_list]
             )(model_callback)
 
-# make params invisible
-app.callback([Output("custom-params", "className")],
-    [Input('param-choice', 'value')],
-    )(toggle_visible)
-
+# run par scan
+app.callback([Output("scan-fig", "figure"),
+              Output("loading-ps", "children")],
+            [Input('ps-param-choice', 'value')]
+            + [Input('ps-persistent-choice', 'value')]
+            + [Input(f"ps-slider-{x['var']}", 'value') for x in slider_list[:-4]]
+            + [Input('ps-variable-choice', 'value')]
+            )(par_scan_callback)
 
 
 

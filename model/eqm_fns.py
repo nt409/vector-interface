@@ -451,11 +451,19 @@ class StabilityMatrix:
         self._check_if_stable()
 
     def _check_if_stable(self):
+        summed = sum(self.matrix)
+        has_nans = np.isnan(summed)
+        
+        if any(has_nans):
+            self.is_stable = "NA"
+            return None
+
         e_vals = np.linalg.eig(self.matrix)[0]
         
         stable = [self._negative_real_part(e) for e in e_vals]
 
         self.is_stable = all(stable)
+
 
     def _negative_real_part(self, e):
         if np.iscomplex(e):

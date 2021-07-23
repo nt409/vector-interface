@@ -23,9 +23,9 @@ def standard_layout(legend_on):
             margin=dict(l=50, b=10, t=50, r=10, pad=0),
             )
 
-def model_fig(traces, xlab, ylab):
+def model_fig(traces, xlab, ylab, ledge):
 
-    fig = go.Figure(data=traces, layout=standard_layout(True))
+    fig = go.Figure(data=traces, layout=standard_layout(ledge))
     fig.update_xaxes(title=xlab)
     fig.update_yaxes(title=ylab) # , fixedrange=True)
 
@@ -47,6 +47,20 @@ def get_traces(xs, ys, clrs, names):
         trc = go.Scatter(x=x,
                 y=y,
                 line=dict(color=clr),
+                name=name,
+                mode="lines")
+
+        traces.append(trc)
+    return traces
+
+def get_traces_scan_fig(xs, ys, clrs, names, showledge):
+    traces = []
+
+    for x, y, clr, name, sl in zip(xs, ys, clrs, names, showledge):
+        trc = go.Scatter(x=x,
+                y=y,
+                line=dict(color=clr),
+                showlegend=sl,
                 name=name,
                 mode="lines")
 

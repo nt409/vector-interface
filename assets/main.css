@@ -127,7 +127,12 @@ p {
     font-size: 12px;
 }
 
+.sticky {
+    position: sticky;
+    top: 50px;
+}
 
+/* end of UC */
 
 
 
@@ -179,28 +184,12 @@ p {
 }
 
 
-#main-nav-links {
-    text-align: left;
-    
-    align-self: start;
-    
-    padding-top: 2px;
-
-    grid-row: 2;
-    grid-column-start: 1;
-    grid-column-end: 3;    
-}
-
-
 .desktop-links {
     margin: auto -20px auto auto;
     float: right;
     font-size: 1.1em;
     display: grid;
     grid-template-columns: auto auto auto;
-    /* text-decoration: none; */
-    /* justify-content: space-between; */
-    /* width: 500px; */
 }
 
 .show-desktop {
@@ -358,6 +347,24 @@ footer {
     margin-right: 0;
 }
 
+
+/* ps page */
+
+.VirtualizedSelectOption {
+    overflow: wrap;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.Select-value, .Select-value-label {
+    overflow: hidden;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+
+
+
 /* Explanation page */
 
 .image {
@@ -377,14 +384,6 @@ footer {
 
     .hide-desktop {
         display: none;
-    }
-
-    #main-nav-links {
-        grid-row: 1;
-        grid-column: 2;
-        grid-column-start: 2;
-        
-        align-self: start;
     }
 
     .wrapper, .header-wrapper, .footer-wrapper {

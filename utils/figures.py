@@ -1,38 +1,5 @@
+from dash_html_components.Tr import Tr
 import plotly.graph_objects as go
-# import numpy as np
-from math import ceil
-
-
-# all possible modebar buttons:
-#  ["zoom2d",
-#     "pan2d",
-#     "select2d",
-#     "lasso2d",
-#     "zoomIn2d",
-#     "zoomOut2d",
-#     "autoScale2d",
-#     "resetScale2d",
-#     "hoverClosestCartesian",
-#     "hoverCompareCartesian",
-#     "zoom3d",
-#     "pan3d",
-#     "resetCameraDefault3d",
-#     "resetCameraLastSave3d",
-#     "hoverClosest3d",
-#     "orbitRotation",
-#     "tableRotation",
-#     "zoomInGeo",
-#     "zoomOutGeo",
-#     "resetGeo",
-#     "hoverClosestGeo",
-#     "toImage",
-#     "sendDataToCloud",
-#     "hoverClosestGl2d",
-#     "hoverClosestPie",
-#     "toggleHover",
-#     "resetViews",
-#     "toggleSpikelines",
-#     "resetViewMapbox"]}
 
 MODEBAR_CONFIG = {"modeBarButtonsToRemove": [
     'pan2d',
@@ -53,28 +20,35 @@ def standard_layout(legend_on):
             height=400,
             showlegend=legend_on,
             xaxis=dict(showgrid=False),
-            margin= dict(l=50, b=10, t=10, r=10, pad=0),
+            margin=dict(l=50, b=10, t=50, r=10, pad=0),
             )
 
-def model_fig(x, y, clr, n):
-    traces = []
+def model_fig(traces, xlab, ylab):
 
-    n_points = ceil(n)
-    
-    x = list(range(n_points))
-    y = list(range(n_points))
+    fig = go.Figure(data=traces, layout=standard_layout(True))
+    fig.update_xaxes(title=xlab)
+    fig.update_yaxes(title=ylab) # , fixedrange=True)
 
-    points = go.Scatter(x=x,
-            y=y,
-            line=dict(color=clr),
-            mode="markers")
-
-    traces.append(points)
-
-    fig = go.Figure(data=traces, layout=standard_layout(False))
-    fig.update_xaxes(title="xlab")
+    fig.update_layout(legend=dict(x=1, 
+                    y=1,
+                    font=dict(size=10),
+                    yanchor="bottom",
+                    xanchor="right",
+                    orientation="h",
+                    bgcolor="rgba(255,255,255,0.5)"))
 
     return fig
 
 
+def get_traces(xs, ys, clrs, names):
+    traces = []
 
+    for x, y, clr, name in zip(xs, ys, clrs, names):
+        trc = go.Scatter(x=x,
+                y=y,
+                line=dict(color=clr),
+                name=name,
+                mode="lines")
+
+        traces.append(trc)
+    return traces

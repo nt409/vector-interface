@@ -15,18 +15,18 @@ slider_list = [dict(step=10, min=0, max=2000, value=1000, var='N', name='N: numb
                 dict(step=0.1, min=0, max=4, value=2, var='Gamma', name=u'\u0393: average time feeding per settled landing'),
                 dict(step=0.1, min=0, max=1, value=0, var='delta', name=u'\u03B4: increase in death rate as more plants visited per feed'),
                 dict(step=0.1, min=0, max=3, value=1, var='beta', name=u'\u03B2: change in birth rate on infected plants'),
-                dict(step=0.1, min=0, max=1, value=2, var='nu minus', name=u'\u03BD\u208B: bias of non-viruliferous vectors to land on infected plants'),
-                dict(step=0.1, min=0, max=1, value=2, var='nu plus', name=u'\u03BD\u208A: bias of viruliferous vectors to land on infected plants'),
+                dict(step=0.1, min=0, max=4, value=1, var='nu minus', name=u'\u03BD\u208B: bias of non-viruliferous vectors to land on infected plants'),
+                dict(step=0.1, min=0, max=4, value=1, var='nu plus', name=u'\u03BD\u208A: bias of viruliferous vectors to land on infected plants'),
                 dict(step=0.1, min=0, max=1, value=0.5, var='omega minus', name=u'\u03C9\u208B: probability non-viruliferous vector settles to feed on susceptible plant'),
                 dict(step=0.1, min=0, max=1, value=0.5, var='omega plus', name=u'\u03C9\u208A: probability viruliferous vector settles to feed on susceptible plant'),
-                dict(step=0.1, min=0, max=1, value=2, var='epsilon minus', name=u'\u03B5\u208B: bias of non-viruliferous vector to feed on infected plant'),
-                dict(step=0.1, min=0, max=1, value=2, var='epsilon plus', name=u'\u03B5\u208A: bias of viruliferous vector to feed on infected plant'),
-                dict(step=0.1, min=0, max=1, value=1, var='gamma', name=u'\u03B3: probability that uninfected plant is inoculated by viruliferous vector on single visit'),
-                dict(step=0.1, min=0, max=1, value=1, var='eta', name=u'\u03B7: probability non-viruliferous vector acquires virus in single visit to infected plant'),
-                dict(step=0.1, min=0, max=1, value=0.1, var='S0', name=u'S\u2080: susceptible host'),
-                dict(step=0.1, min=0, max=1, value=0.1, var='I0', name=u'I\u2080: infected host'),
-                dict(step=0.1, min=0, max=1, value=0.1, var='X0', name=u'X\u2080: nonviruliferous vector'),
-                dict(step=0.1, min=0, max=1, value=0.1, var='Z0', name=u'Z\u2080: viruliferous vector'),
+                dict(step=0.1, min=0, max=2, value=1, var='epsilon minus', name=u'\u03B5\u208B: bias of non-viruliferous vector to feed on infected plant'),
+                dict(step=0.1, min=0, max=2, value=1, var='epsilon plus', name=u'\u03B5\u208A: bias of viruliferous vector to feed on infected plant'),
+                # dict(step=0.1, min=0, max=1, value=1, var='gamma', name=u'\u03B3: probability that uninfected plant is inoculated by viruliferous vector on single visit'),
+                # dict(step=0.1, min=0, max=1, value=1, var='eta', name=u'\u03B7: probability non-viruliferous vector acquires virus in single visit to infected plant'),
+                dict(step=0.02, min=0, max=1, value=0.02, var='host-inc-0', name=u'I\u2080/(S\u2080+I\u2080): initial host incidence'),
+                dict(step=0.02, min=0, max=1, value=1, var='N-frac', name=u'Initial host amount (as a fraction of N)'),
+                dict(step=0.02, min=0, max=1, value=0.02, var='vec-inc-0', name=u'Z\u2080/(X\u2080+Z\u2080): initial vector incidence'),
+                dict(step=0.02, min=0, max=1, value=1, var='kapp-frac', name=u'Initial vector amount (as a fraction of \u03BA)'),
                 ]
 
 
@@ -54,13 +54,13 @@ sliders = [html.Div([
 
 PT_or_not = html.Div([
             
-            html.P("Type of transmission", className="control-label"),
+            html.P("Scenario", className="control-label"),
                 
             dcc.RadioItems(
                             id="persistent-choice",
                             options=[
-                                {'label': ' Non-persistent ', 'value': 'NPT'},
-                                {'label': ' Persistent ', 'value': 'PT'},
+                                {'label': ' Non-persistent transmission ', 'value': 'NPT'},
+                                {'label': ' Persistent transmission ', 'value': 'PT'},
                             ],
                             value='NPT',
                             labelStyle={'display': 'block'}
@@ -92,8 +92,8 @@ def param_group(title, index, *controls):
 pg1 = param_group("Host parameters", 1, *sliders[:3])
 pg2 = param_group("Vector parameters", 2, *sliders[3:10])
 pg3 = param_group("Preference parameters", 3, *sliders[10:16])
-pg4 = param_group("Transmission parameters", 4, *sliders[16:18])
-pg5 = param_group("Initial conditions", 5, *sliders[18:])
+# pg4 = param_group("Transmission parameters", 4, *sliders[16:18])
+pg5 = param_group("Initial conditions", 5, *sliders[16:])
 
 custom_params = html.Div(
         id="custom-params",
@@ -108,7 +108,7 @@ custom_params = html.Div(
             pg1,
             pg2,
             pg3,
-            pg4,
+            # pg4,
             pg5,
 
         ])
@@ -126,11 +126,11 @@ model_controls = html.Div([
                 dcc.RadioItems(
                     id="param-choice",
                     options=[
-                        {'label': ' Default (non-persistent transmission) ', 'value': 'NPT'},
-                        {'label': ' Default (persistent transmission) ', 'value': 'PT'},
-                        {'label': ' Custom ', 'value': 'C'}
+                        {'label': ' Default (non-persistent transmission) ', 'value': 'def-NPT'},
+                        {'label': ' Default (persistent transmission) ', 'value': 'def-PT'},
+                        {'label': ' Custom ', 'value': 'def-C'}
                     ],
-                    value='NPT',
+                    value='def-NPT',
                     labelStyle={'display': 'block'}
                 ),
         
@@ -147,16 +147,48 @@ model_controls = html.Div([
 
 
 figure_cont = html.Div([
+
+            #
             html.Span(className="emph-line"),
+            html.H4("host dynamics", className="uppercase-title"),
 
-            html.H4(" ", id="model-fig-title", className="uppercase-title"),
+            html.Div(dcc.Graph(id='host-fig',
+                config = MODEBAR_CONFIG,
+                className="fig-cont"
+                )),
+            
+            #
+            html.Span(className="emph-line"),
+            html.H4("vector dynamics", className="uppercase-title"),
 
-            html.Div(dcc.Graph(id='model-fig',
-                config = MODEBAR_CONFIG
-                ))
+            html.Div(dcc.Graph(id='vector-fig',
+                config = MODEBAR_CONFIG,
+                className="fig-cont"
+                )),
+            
+            #
+            html.Span(className="emph-line"),
+            html.H4("incidence dynamics", className="uppercase-title"),
+
+            html.Div(dcc.Graph(id='incidence-fig',
+                config = MODEBAR_CONFIG,
+                className="fig-cont"
+                )),
+
+            #
+            html.Span(className="emph-line"),
+            html.H4("Equilibria", className="uppercase-title"),
+            html.Div(id="eqm-table-cont", className="table-container"),
+            
+            #
+            html.Span(className="emph-line"),
+            html.H4("Model quantities", className="uppercase-title"),
+            html.Div(id="R0-k-table-cont", className="table-container"),
+            
+            #
+
             ],
             className="figure-cont")
-
 
 
 

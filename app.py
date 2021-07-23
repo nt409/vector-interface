@@ -10,7 +10,7 @@ from components.footer import footer
 from components.pg_model import slider_list
 
 
-from utils.utils import retrieve_page, model_callback, toggle_open, toggle_visible
+from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -40,8 +40,6 @@ app.layout = html.Div([
 
 
 ########################################################################################################################
-# edit meta below so search engines can find
-# add analytics into head
 app.index_string = """<!DOCTYPE html>
 <html>
     <head>
@@ -90,9 +88,11 @@ for id_name, activator in zip(ids,acts):
 
 
 # run model
-app.callback([
-                Output("model-fig", "figure"),
-                Output("model-fig-title", "children"),
+app.callback([Output("host-fig", "figure"),
+              Output("vector-fig", "figure"),
+              Output("incidence-fig", "figure"),
+              Output("eqm-table-cont", "children"),
+              Output("R0-k-table-cont", "children"),
             ],
             [Input('param-choice', 'value')]
             + [Input('persistent-choice', 'value')]
@@ -103,6 +103,9 @@ app.callback([
 app.callback([Output("custom-params", "className")],
     [Input('param-choice', 'value')],
     )(toggle_visible)
+
+
+
 
 
 

@@ -126,11 +126,11 @@ p {
 .small-text {
     font-size: 12px;
 }
-
-.sticky {
-    position: sticky;
+/* 
+.sticky-desktop {
+    position: static;
     top: 50px;
-}
+} */
 
 /* end of UC */
 
@@ -174,8 +174,11 @@ p {
 
 #nav-menu {
     background-color: var(--secondary);
-    margin: -10px 0 10px;
+    margin: 0 0 10px;
     padding: 10px 0;
+    width: calc(100vw - 20px);
+    position: absolute;
+    top: 50px;
 }
 
 #nav-menu div {
@@ -199,7 +202,6 @@ p {
 .hide-desktop {
     display: block;
 }
-
 
 
 
@@ -263,13 +265,14 @@ footer {
 }
 
 .controls {
-    position: sticky;
-    top: 50px;
+    /* position: static; */
+    /* top: 50px; */
     background-color: var(--secondary);
     border-radius: 5px;
     padding: 10px;
     margin: 0 0 50px;
     height: min-content;
+    max-width: calc(100vw - 20px);
 }
 
 .figure-cont {
@@ -277,6 +280,7 @@ footer {
     border-radius: 5px;
     padding: 10px;
     height: min-content;
+    max-width: calc(100vw - 20px);
 }
 
 .control-wrapper {
@@ -433,7 +437,14 @@ footer {
     }
 
     .controls {
+        position: sticky;
+        top: 50px;
         margin: 0;
+    }
+
+    .sticky-desktop {
+        position: sticky;
+        top: 50px;
     }
 
 }

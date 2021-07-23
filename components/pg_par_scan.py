@@ -111,7 +111,7 @@ figr_cont = html.Div([
             
 
             ],
-            className="figure-cont sticky")
+            className="figure-cont sticky-desktop")
 
 
 

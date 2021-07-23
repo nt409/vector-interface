@@ -15,3 +15,8 @@ prob make impossible to pick 0 for some params, but the eta case needs thought
 
 hidden/shown via CSS
 mobile: no ylabel, y axis non scrollable, y in plotly fig title
+
+
+## style
+
+controls box fit content

@@ -3,6 +3,7 @@
 from components.pg_model import model_page
 from components.pg_explan import explan_page
 from components.pg_404 import page_404
+from components.pg_par_scan import par_scan_page
 
 from utils.fns import get_soln, get_params, \
     get_host_fig, get_vec_fig, get_inc_fig, \
@@ -39,6 +40,8 @@ def retrieve_page(pathname):
         return model_page
     elif pathname == '/explanation':
         return explan_page
+    elif pathname == '/param-scan':
+        return par_scan_page
     else:
         return page_404
 

@@ -50,7 +50,7 @@ app.index_string = """<!DOCTYPE html>
         content="Mathemtical model of vector/host interactions">
 
         {%metas%}
-        <title>Vector Paper</title>
+        <title>Plant disease vector preference model</title>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Google+Sans">
         <link rel="icon" href="assets/favicon.ico">
         {%css%}

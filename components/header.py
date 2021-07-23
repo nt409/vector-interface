@@ -16,6 +16,7 @@ header = html.Header(html.Div([
                             html.Div([
                                 dbc.Collapse([
                                     html.Div(html.A("Model", href="/", className="navLink-mb")),
+                                    html.Div(html.A("Parameter Scan", href="/param-scan", className="navLink-mb")),
                                     html.Div(html.A("Explanation", href="/explanation", className="navLink-mb")),
                                 ],
                                 id="nav-menu",
@@ -26,8 +27,9 @@ header = html.Header(html.Div([
                             ),
                             
                             html.Div([
-                                html.Div(html.A("Model", href="/", className="navLink")),
-                                html.Div(html.A("Explanation", href="/explanation", className="navLink rightmost-link")),
+                                html.A("Model", href="/", className="navLink-dt"),
+                                html.A("Parameter Scan", href="/param-scan", className="navLink-dt"),
+                                html.A("Explanation", href="/explanation", className="navLink-dt"),
                             ],
                             className="desktop-links show-desktop hide-mobile",
                             ),

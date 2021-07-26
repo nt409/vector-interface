@@ -1,20 +1,77 @@
 
 
+
+
+
+
+
+## Nik comments
+
+<!-- 1 - done -->
+2 - done... but not very convincingly
+3 - depends on case - which one was unconvincing?
+<!-- 4 - done -->
+5 - not easily
+<!-- 6 - done -->
+
+<!-- 1/ on the parameter scan, could you make the %age of the baseline that is the top and bottom of the x-axis. -->
+
+2/ make the graphs not have gaps
+
+3/ check stability of I = 0 eqm; shouldn’t there be dark green on lhs of axis for the graph from 2/?
+
+5/ For the parameter scan, when it is calculating, could a progress bar be added?
+
+<!-- 6/ At various places the maths symbols are given poorly typeset names, e.g. equilibrium box at bottom of Model tab; eps_m as graph label for parameter scan -->
+
+
+
+
 ## error handling
-When:
-or eta, gamma, nu are 0
-gamma = 1 or om_p
-eta = 1 - eps_m * om_m or eps_m * om_m
+# Parameter restrictions
 
-sigma 0, causes prob for kappa calc
+Must be greater than 0:
+    N
+    rho
+    mu
+    sigma
+    zeta
+    Gamma
+    nu_i
+    omega_i
+    eps_i
 
-prob make impossible to pick 0 for some params, but the eta case needs thought
+Can equal 0:
+    alpha
+    delta
+    beta
+    tau
+
+Also need:
+    omega_i * eps_i >= 1
+    tau and alpha both 0 (I think, get ODE solver error o.w.)
+
+Somewhere it says that nu_- and nu_+ can differ in the PT case. Does this mean they can't differ in the NPT case?
+
+Do you have sensible upper bounds for:
+    rho
+    zeta
+    N
+    tau
+    alpha
+
+
+
+
+
 
 
 ## mobile figs
 
 hidden/shown via CSS
 mobile: no ylabel, y axis non scrollable, y in plotly fig title
+
+
 
 
 ## style

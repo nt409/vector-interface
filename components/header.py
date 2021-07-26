@@ -35,7 +35,7 @@ header = html.Header(html.Div([
                             ),
                 ]),
             ],
-            id="main-nav-links"
+            id="main-nav-links",
             ),
         
         ],

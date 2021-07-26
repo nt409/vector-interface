@@ -2,7 +2,7 @@ import dash_table
 import pandas as pd
 import numpy as np
 
-from utils.figures import model_fig, get_traces, get_traces_scan_fig
+from utils.figures import model_fig, get_traces_clr_nm, get_term_inc_fig
 
 from model.pars import DefaultParams, CustomParams
 from model.eqm_fns import RootAnalyser, StabilityMatrix
@@ -24,7 +24,7 @@ def get_host_fig(soln):
     clrs = ["#00b050", "#c00000"]
     names = ["Susceptible: S", "Infected: I"]
 
-    trcs = get_traces(xs, ys, clrs, names)
+    trcs = get_traces_clr_nm(xs, ys, clrs, names)
     fig = model_fig(trcs, "Time (days)", "Number of hosts", True)
     
     return fig
@@ -38,7 +38,7 @@ def get_vec_fig(soln):
     clrs = ["#92d050", "#e46c0a"]
     names = ["Nonviruliferous: X", "Viruliferous: Z"]
     
-    trcs = get_traces(xs, ys, clrs, names)
+    trcs = get_traces_clr_nm(xs, ys, clrs, names)
     fig = model_fig(trcs, "Time (days)", "Number of vectors", True)
     
     return fig
@@ -57,7 +57,7 @@ def get_inc_fig(soln):
 
     names = ["Host incidence: I/(S+I)", "Vector incidence: Z/(X+Z)"]
 
-    trcs = get_traces(xs, ys, clrs, names)
+    trcs = get_traces_clr_nm(xs, ys, clrs, names)
     fig = model_fig(trcs, "Time (days)", "Incidence", True)
     
     return fig
@@ -72,38 +72,178 @@ def get_eqm_table(p):
 
     df = df[df['bio_realistic']]
 
-    df = df.round(3)
-
     df = df.drop(columns=["solves_system", "tol", "bio_realistic"])
 
-    df.columns = list(df.columns[:-1]) + ["Stable?"]
+    dis_f_eqm = get_dis_free_eqm_dict(p)
+    
+    df = df.append(dis_f_eqm, ignore_index=True)
+
+    df = df.round(3)
+
+    for ind in ["S", "I", "X", "Z", "host_inc", "vec_inc"]:
+        df[ind] = df[ind].astype(float)
+
+    df.columns = list(df.columns[:-3]) + ["Host incidence", "Vector incidence", "Stable?"]
 
     return my_table(df)
 
 
 
-def get_x_min_and_max(slider_list, var):
+def get_dis_free_eqm_dict(p):
+
+    kappa = get_kappa(p)
+    
+    dis_free_eqm = [p.N, 0, kappa, 0]
+    
+    stab = check_stability_of_eqm(p, dis_free_eqm)
+
+    return dict(S=p.N,
+            I=0,
+            X=kappa,
+            Z=0,
+            host_inc=0,
+            vec_inc=0,
+            is_stable=stab,
+            )
+
+def get_trivial_eqm_dict(p):
+
+    triv_eqm = [0, 0, 0, 0]
+
+    stab = check_stability_of_eqm(p, triv_eqm)
+
+    return dict(S=0,
+            I=0,
+            X=0,
+            Z=0,
+            host_inc="NA",
+            vec_inc="NA",
+            is_stable=stab,
+            )
+
+
+def get_x_min_max_lab(slider_list, var):
     df = pd.DataFrame(slider_list)
     filtered = df[df["var"]==var]
 
     xmin = list(filtered["min"])[0]
     xmax = list(filtered["max"])[0]
-    return xmin, xmax
+    xlab = list(filtered["axis_label"])[0]
+    
+    xval = list(filtered["value"])[0]
+
+    if xval>0:
+        high = 100*xmax/xval
+        low = 100*xmin/xval
+    else:
+        high = "NA"
+        low = "NA"
+
+    out = dict(min=xmin, max=xmax, value=xval, lab=xlab, high=high, low=low)
+    return out
+
+
+def get_scan_figure(p, var, x_info, which_inc, *params):
+    
+    df_out = get_ps_equilibria_df(p, var, x_info, which_inc)
+
+    df_s = df_out[df_out["stab"].isin([True, None])]
+    df_u = df_out[df_out["stab"].isin([False, None])]    
+
+    p = get_params(*params)
+
+    dis_free = get_dis_free_df(p, var, x_info)
+    
+    dis_free_s = dis_free[dis_free["stab"].isin([True])]
+    dis_free_u = dis_free[dis_free["stab"].isin([False])]
+
+    # # get "non-gap" background lines
+    # df_srtd = df_out.sort_values(by=["y", "x"])
+    # df_srtd = df_srtd[~df_srtd["stab"].isin([None])]
+
+    # x_join, y_join = get_joiner_0_to_non_0(df_srtd)
+
+    # x_non_0, y_non_0 = get_joiner_non_0(df_srtd)
+    
+
+    xs_plot = [
+                # x_join,
+                # x_non_0,
+                # list(dis_free.x),
+                list(dis_free_s.x),
+                list(dis_free_u.x),
+                list(df_s.x),
+                list(df_u.x)]
+    
+    ys_plot = [
+                # y_join,
+                # y_non_0,
+                # list(dis_free.y),
+                list(dis_free_s.y),
+                list(dis_free_u.y),
+                list(df_s.y),
+                list(df_u.y)]
+    
+    stabs_plot = [
+                # None,
+                # None,
+                # None,
+                True,
+                False,
+                True,
+                False]
+
+    y_str = "I/(S+I)" if which_inc=="host" else "Z/(X+Z)"
+
+    fig = get_term_inc_fig(xs_plot, ys_plot, stabs_plot, x_info, y_str)
+
+    return fig
 
 
 
+def get_joiner_non_0(df_srtd):
+    
+    y_use = list(df_srtd.y)
+    
+    y_diffs = [abs(y_use[ii+1] - y_use[ii])
+                    for ii in range(len(y_use)-1)]
+    
+    if max(y_diffs)>max(y_use)/50:
+        x_non_0 = []
+        y_non_0 = []
+    else:
+        x_non_0 = list(df_srtd.x)
+        y_non_0 = list(df_srtd.y)
 
-def get_ps_equilibria_df(p, var, xmin, xmax):
+    return x_non_0, y_non_0
+
+
+def get_joiner_0_to_non_0(df_srtd):
+    y_use = list(df_srtd.y)
+
+    if min(y_use)<max(y_use)/50:
+        x1 = list(df_srtd.x)[0]
+        x2 = list(df_srtd.x)[0]
+        
+        x_join = [x1, x2]
+        y_join = [0, list(df_srtd.y)[0]]
+    else:
+        x_join = []
+        y_join = []
+    return x_join, y_join
+
+
+def get_ps_equilibria_df(p, var, x_info, which_inc):
     
     xs = []
     ys = []
     stabs = []
     
-    for x in np.linspace(xmin, xmax, 501):
+    for x in np.linspace(x_info["min"], x_info["max"], 501):
         setattr(p, var, x)
 
         try:
-            y, stab = get_terminal_incidence_and_stab(p)
+            y, stab = get_terminal_incidence_and_stab(p, which_inc)
             ys += y
             xs += [x]*len(y)
             stabs += stab
@@ -124,24 +264,20 @@ def get_eqm_vals(p):
 
     df = df[df['bio_realistic']]
 
-    df = df.round(3)
-
-    df = df.drop(columns=["solves_system", "tol", "bio_realistic"])    
-
     return df
 
 
-def get_dis_free_df(p, xmin, xmax, var):
+def get_dis_free_df(p, var, x_info):
     kappa = get_kappa(p)
     
     xs = []
     ys = []
     stabs = []
 
-    for x in np.linspace(xmin, xmax, 501):
+    for x in np.linspace(x_info["min"], x_info["max"], 501):
         setattr(p, var, x)
         dis_free_eqm = [p.N, 0, kappa, 0]
-        stab = check_stability_dis_free(p, dis_free_eqm)
+        stab = check_stability_of_eqm(p, dis_free_eqm)
         xs.append(x)
         ys.append(0)
         stabs.append(stab)
@@ -150,7 +286,7 @@ def get_dis_free_df(p, xmin, xmax, var):
 
 
 
-def check_stability_dis_free(p, vec):
+def check_stability_of_eqm(p, vec):
     stab = StabilityMatrix(p, vec)
     return stab.is_stable
     
@@ -165,6 +301,8 @@ def get_R0_kappa_table(p):
     
     df = pd.DataFrame(data)
 
+    df = df.round(3)
+
     return my_table(df)
 
 
@@ -173,7 +311,7 @@ def get_R0_kappa_table(p):
 def get_kappa(p):
     mult = (p.alpha/p.sigma)
     inner_bracket = (1/p.om_m) - 1
-    bracket = 1+ p.delta * inner_bracket
+    bracket = 1 + p.delta * inner_bracket
     out = p.zeta * (1 - mult * bracket)
     return out
 
@@ -214,7 +352,7 @@ def my_table(df):
 
         style_cell = {
                 'font-family': 'sans-serif',
-                'padding': '5px 20px',
+                'padding': '5px 10px',
                 'font_size': '12px',
             },
         
@@ -237,6 +375,7 @@ def get_params(*params):
 
 def get_init_cnds(p, *params):
     kappa = get_kappa(p)
+
     if params[0]=="def-NPT":
         return [999, 1, kappa-1, 1]
     elif params[0]=="def-PT":
@@ -267,39 +406,22 @@ def get_custom_init_conds(kappa, *params):
     return [S0, I0, X0, Z0]
 
 
-def get_terminal_incidence_and_stab(p):
+def get_terminal_incidence_and_stab(p, which_inc):
     df = get_eqm_vals(p)
 
-    I_list = list(df.I)
-    S_list = list(df.S)
+    if which_inc=="host":
+        S_list = list(df.S)
+        I_list = list(df.I)
+        term_inc = [I_list[ii]/(S_list[ii] + I_list[ii])
+                        for ii in range(len(S_list))]
+    else:
+        X_list = list(df.X)
+        Z_list = list(df.Z)
+        term_inc = [Z_list[ii]/(X_list[ii] + Z_list[ii])
+                        for ii in range(len(Z_list))]
 
-    term_inc = [I_list[ii]/(S_list[ii] + I_list[ii]) for ii in range(len(S_list))]
     stability = list(df.is_stable)
 
     return term_inc, stability
 
 
-def get_scan_fig(xs, ys, var, stab):
-
-    clrs = ["rgb(0,89,0)" if ss else "rgb(151,251,151)" for ss in stab]
-    names = ["Stable" if ss else "Unstable" for ss in stab]
-
-    showledge = get_showlegend(xs)
-    
-    trcs = get_traces_scan_fig(xs, ys, clrs, names, showledge)
-
-    fig = model_fig(trcs, var, u"Terminal incidence: I/(S+I) at t=\u221E", True)
-    return fig
-
-
-def get_showlegend(xs):
-    
-    showledge = [False, False, True, True]
-
-    # if one of traces are empty, use other option to fill legend
-    if not xs[2]:
-        showledge[0] = True
-    if not xs[3]:
-        showledge[1] = True
-
-    return showledge

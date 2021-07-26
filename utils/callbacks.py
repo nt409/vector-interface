@@ -1,5 +1,3 @@
-import pandas as pd
-
 from components.pg_model import model_page
 from components.pg_explan import explan_page
 from components.pg_404 import page_404
@@ -8,15 +6,27 @@ from components.helper_fns import slider_list
 
 from utils.fns import get_soln, get_params, get_host_fig, \
     get_vec_fig, get_inc_fig, get_eqm_table, \
-    get_R0_kappa_table, get_init_cnds, get_scan_fig, \
-    get_x_min_and_max, get_ps_equilibria_df, \
-    get_dis_free_df
-
+    get_R0_kappa_table, get_init_cnds, get_scan_figure, \
+    get_x_min_max_lab
 
 
 
 def model_callback(*params):
-    p = get_params(*params)
+
+    p = get_params(*params[:18])
+
+    if not p.vc.is_valid:
+        
+        return [True,
+                p.vc.error_message,
+                dict(data=[], layout={}),
+                dict(data=[], layout={}),
+                dict(data=[], layout={}),
+                None,
+                None,
+                None,
+                None,
+                ]
 
     initial_conds = get_init_cnds(p, *params)
 
@@ -32,36 +42,51 @@ def model_callback(*params):
 
     tbl_R0_k = get_R0_kappa_table(p)
 
-    return [fig_host, fig_vec, fig_incidence, tbl_eqm, tbl_R0_k, None]
+    return [False,
+            "",
+            
+            fig_host,
+            fig_vec,
+            fig_incidence,
+            
+            tbl_eqm,
+            tbl_R0_k,
+
+            None,
+            None,
+            ]
 
 
 
 
-def par_scan_callback(*params):
-    p = get_params(*params)
+def par_scan_callback(button, *params):
+    p = get_params(*params[:18])
+
+
+    if not p.vc.is_valid:
+        return [True,
+                p.vc.error_message,
+                dict(data=[], layout={}),
+                dict(data=[], layout={}),
+                None,
+                None,
+                ]
 
     var = params[-1]
 
-    xmin, xmax = get_x_min_and_max(slider_list, var)
+    x_info = get_x_min_max_lab(slider_list, var)
 
-    df_out = get_ps_equilibria_df(p, var, xmin, xmax)
+    host_fig = get_scan_figure(p, var, x_info, "host", *params)
 
-    df_s = df_out[df_out["stab"].isin([True, None])]
-    df_u = df_out[df_out["stab"].isin([False, None])]    
+    vec_fig = get_scan_figure(p, var, x_info, "vector", *params)
 
-    p = get_params(*params)
-    df = get_dis_free_df(p, xmin, xmax, var)
-    
-    dis_free_s = df[df["stab"].isin([True])]
-    dis_free_u = df[df["stab"].isin([False])]
-    
-    xs_plot = [list(dis_free_s.x), list(dis_free_u.x), list(df_s.x), list(df_u.x)]
-    ys_plot = [list(dis_free_s.y), list(dis_free_u.y), list(df_s.y), list(df_u.y)]
-    stabs_plot = [True, False, True, False]
-
-    scan_figr = get_scan_fig(xs_plot, ys_plot, var, stabs_plot)
-
-    return [scan_figr, None]
+    return [False,
+            "",
+            host_fig, 
+            vec_fig,
+            None,
+            None,
+            ]
 
 
 
@@ -89,3 +114,7 @@ def toggle_visible(radio):
     else:
         return ["invisible"]
 
+def toggle_modal(n, is_open):
+    # if n:
+        # return not is_open
+    return False

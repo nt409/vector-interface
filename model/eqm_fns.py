@@ -31,7 +31,7 @@ class ODESystem:
     def Lambda(self, S, I, Z):
         p = self.params
 
-        frac = S/ (S + p.nu_p*I)
+        frac = S / (S + p.nu_p*I)
 
         out = self.phi_p(S,I) * p.gamma * Z * frac
         return out
@@ -321,7 +321,6 @@ class Quartic:
 
 
 
-
 class RootAnalyser:
     def __init__(self, params) -> None:
         self.params = params
@@ -335,15 +334,16 @@ class RootAnalyser:
         p = self.params
 
         q = Quartic(p)
+
         coef = q.coefficients
-        
+
         self.roots = np.roots(coef)
 
 
     def analyse_roots(self):
         self.check_roots_in_range()
-        self.check_solves_system()
         self.find_equilibria()
+        self.check_solve_system()
         self.check_stability()
         self.get_df()
 
@@ -361,15 +361,19 @@ class RootAnalyser:
         else:
             return True
 
-    def check_solves_system(self):
+    def check_solve_system(self):
         is_sol_list = []
         tols_list = []
         
         tol = 1e-10
         
-        for root in self.roots:
-            e = EqmFinder(self.params, root)
-            eqm_vec = [e.S, e.I, e.X, e.Z]
+        for ii in range(len(self.roots)):
+            S = self.S_list[ii]
+            I = self.I_list[ii]
+            X = self.X_list[ii]
+            Z = self.Z_list[ii]
+
+            eqm_vec = [S, I, X, Z]
 
             o = ODESystem(self.params)
             derivs = o.system(0, eqm_vec)
@@ -423,12 +427,18 @@ class RootAnalyser:
 
 
     def get_df(self):
+        host_inc = [self.I_list[ii]/(self.I_list[ii] + self.S_list[ii]) 
+                    for ii in range(len(self.I_list))]
+        vec_inc = [self.Z_list[ii]/(self.Z_list[ii] + self.X_list[ii]) 
+                    for ii in range(len(self.X_list))]
         
         out = pd.DataFrame(dict(
                     S=self.S_list,
                     I=self.I_list,
                     X=self.X_list,
                     Z=self.Z_list,
+                    host_inc=host_inc,
+                    vec_inc=vec_inc,
                     bio_realistic=self.roots_in_range,
                     solves_system=self.roots_solve_system,
                     tol=self.root_sol_tol,

@@ -11,7 +11,7 @@ from components.helper_fns import slider_list
 
 
 from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
-    par_scan_callback
+    par_scan_callback, toggle_modal
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -97,14 +97,19 @@ for id_name, activator in zip(ids, acts):
     app.callback([Output(id_name, "className")],
         [Input(activator, "value")],
         )(toggle_visible)
-    
+
+
 # run model
-app.callback([Output("host-fig", "figure"),
+app.callback([
+              Output("m-error-modal", "is_open"),
+              Output("m-modal-content", "children"),
+              Output("host-fig", "figure"),
               Output("vector-fig", "figure"),
               Output("incidence-fig", "figure"),
               Output("eqm-table-cont", "children"),
               Output("R0-k-table-cont", "children"),
               Output("loading-m", "children"),
+              Output("loading-m-2", "children"),
             ],
             [Input('param-choice', 'value')]
             + [Input('persistent-choice', 'value')]
@@ -112,12 +117,19 @@ app.callback([Output("host-fig", "figure"),
             )(model_callback)
 
 # run par scan
-app.callback([Output("scan-fig", "figure"),
-              Output("loading-ps", "children")],
-            [Input('ps-param-choice', 'value')]
-            + [Input('ps-persistent-choice', 'value')]
-            + [Input(f"ps-slider-{x['var']}", 'value') for x in slider_list[:-4]]
-            + [Input('ps-variable-choice', 'value')]
+app.callback([
+              Output("ps-error-modal", "is_open"),
+              Output("ps-modal-content", "children"),
+              Output("ps-host-fig", "figure"),
+              Output("ps-vec-fig", "figure"),
+              Output("loading-ps", "children"),
+              Output("loading-ps-2", "children"),
+              ],
+            [Input('ps-run-button', 'n_clicks')],
+            [State('ps-param-choice', 'value')]
+            + [State('ps-persistent-choice', 'value')]
+            + [State(f"ps-slider-{x['var']}", 'value') for x in slider_list[:-4]]
+            + [State('ps-variable-choice', 'value')]
             )(par_scan_callback)
 
 

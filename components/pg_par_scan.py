@@ -3,8 +3,8 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 
 from utils.figures import MODEBAR_CONFIG
-from components.helper_fns import slider_list, get_ctrl_group, get_sliders, \
-    get_par_choice
+from components.helper_fns import get_run_button, slider_list, get_ctrl_group, get_sliders, \
+    get_par_choice, get_modal
 
 
 ps_sliders = get_sliders(slider_list, "ps-")
@@ -52,14 +52,12 @@ ps_PT_or_not = html.Div([
 pg1 = get_ctrl_group("Host parameters", 1, "ps-", *ps_sliders[:3])
 pg2 = get_ctrl_group("Vector parameters", 2, "ps-", *ps_sliders[3:10])
 pg3 = get_ctrl_group("Preference parameters", 3, "ps-", *ps_sliders[10:16])
-# pg5 = get_ctrl_group("Initial conditions", 5, "ps-", *ps_sliders[16:])
 
 cust_params = html.Div(
         id="ps-custom-params",
         children=[
     
             html.Span(className="emph-line"),
-
             html.H4("Custom parameters", className="uppercase-title"),
 
             ps_PT_or_not,
@@ -67,11 +65,13 @@ cust_params = html.Div(
             pg1,
             pg2,
             pg3,
-            # pg4,
-            # pg5,
         ])
 
 param_choice = get_par_choice("ps-")
+
+plot_button = get_run_button("ps")
+
+
 
 ps_controls = html.Div([
 
@@ -83,9 +83,9 @@ ps_controls = html.Div([
 
         param_choice,
 
-
         cust_params,
 
+        plot_button,
         
     ], className="controls")
 
@@ -94,35 +94,58 @@ ps_controls = html.Div([
 
 figr_cont = html.Div([
 
-            #
-            html.Span(className="emph-line"),
-            html.H4("parameter scan", className="uppercase-title"),
-            
-            html.Div(dbc.Spinner(
+            html.Div(dcc.Loading(
                     html.Div(id="loading-ps"),
-                    color='#295939'),
+                    color='rgba(0,0,0,0)',
+                    type="circle",
+                    ),
+                    id="grey-screen-wrapper-ps"
                     ),
 
-            html.Div(dcc.Graph(id='scan-fig',
+            html.Div(dbc.Spinner(
+                    html.Div(id="loading-ps-2"),
+                    spinner_style={"width": "60px", "height": "60px", "font-size": "20px"},
+                    color='#295939'),
+                    className="fig-spinner"
+                    ),
+
+
+            #
+            html.Span(className="emph-line"),
+            html.H4("parameter scan: terminal host incidence", className="uppercase-title"),
+            
+
+            html.Div(dcc.Graph(id='ps-host-fig',
                 config = MODEBAR_CONFIG,
                 className="fig-cont"
                 )),
             
+            #
+            html.Span(className="emph-line"),
+            html.H4("parameter scan: terminal vector incidence", className="uppercase-title"),
             
 
+            html.Div(dcc.Graph(id='ps-vec-fig',
+                config = MODEBAR_CONFIG,
+                className="fig-cont"
+                )),
+            
             ],
             className="figure-cont sticky-desktop")
 
 
+modal = get_modal("ps")
 
 
 par_scan_page =  html.Div(
     [
+
+    modal,
     
     html.H1(
         "Parameter scan",
         className="page-title"),
-
+    
     html.Div([
         ps_controls,
         figr_cont,

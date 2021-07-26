@@ -30,7 +30,7 @@ class Simulator:
 
     def setup_solver(self, initial_conds):
         odeSolver = ode(self.ode_sys.system)
-        odeSolver.set_integrator('dopri5')
+        odeSolver.set_integrator('dopri5', max_step=10)
         odeSolver.set_initial_value(initial_conds, self.out.t[0])
         self.solver = odeSolver
 

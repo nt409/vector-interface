@@ -21,7 +21,6 @@ def model_callback(*params):
     p = get_params(*params[:-4])
 
     if not p.vc.is_valid:
-        
         return [True,
                 p.vc.error_message,
                 dict(data=[], layout={}),
@@ -33,6 +32,25 @@ def model_callback(*params):
                 None,
                 ]
     
+
+
+    try:
+        return run_model_callback(p, *params)
+    except:
+        return [True,
+            "Error in generating solution - try another parameter set",
+            dict(data=[], layout={}),
+            dict(data=[], layout={}),
+            dict(data=[], layout={}),
+            None,
+            None,
+            None,
+            None,
+            ]
+
+
+
+def run_model_callback(p, *params):
     def_or_cust = params[0]
     N = params[2]
     IC_pars = params[-4:]
@@ -66,6 +84,8 @@ def model_callback(*params):
             ]
 
 
+
+
 def par_scan_callback(button, *params):
 
     p = get_params(*params[:-2])
@@ -78,7 +98,25 @@ def par_scan_callback(button, *params):
                 None,
                 None,
                 ]
+
+    return run_PS_callback(*params)
     
+    try:
+        return run_PS_callback(*params)
+    except:
+        return [True,
+            "Error in generating solution - try another parameter set",
+            dict(data=[], layout={}),
+            dict(data=[], layout={}),
+            None,
+            None,
+            ]
+
+
+
+
+def run_PS_callback(*params):
+
     var_use = get_var_name_for_scan(params[0], params[1], params[-2], params[-1])
     
     pars_use = list(params[:-2]) + [var_use]

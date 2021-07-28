@@ -122,11 +122,17 @@ class EqmTable:
         dis_f_eqm = self.get_dis_free_eqm_dict()
         
         df = df.append(dis_f_eqm, ignore_index=True)
+        
+        dis_f_eqm_nv = self.get_dis_free_eqm_dict_no_vec()
+        
+        df = df.append(dis_f_eqm_nv, ignore_index=True)
 
         df = df.round(3)
 
         for ind in ["S", "I", "X", "Z", "host_inc", "vec_inc"]:
             df[ind] = df[ind].astype(float)
+
+        df["is_stable"] = [str(ee).capitalize() for ee in df["is_stable"]]
 
         df.columns = list(df.columns[:-3]) + ["Host incidence", "Vector incidence", "Stable?"]
 
@@ -146,6 +152,23 @@ class EqmTable:
         return dict(S=p.N,
                 I=0,
                 X=kappa,
+                Z=0,
+                host_inc=0,
+                vec_inc=0,
+                is_stable=stab,
+                )
+
+
+    def get_dis_free_eqm_dict_no_vec(self):
+        p = self.params
+
+        dis_free_eqm_no_vec = [p.N, 0, 0, 0]
+        
+        stab = StabilityMatrix(p, dis_free_eqm_no_vec).is_stable
+
+        return dict(S=p.N,
+                I=0,
+                X=0,
                 Z=0,
                 host_inc=0,
                 vec_inc=0,

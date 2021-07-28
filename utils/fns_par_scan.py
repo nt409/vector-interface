@@ -48,6 +48,8 @@ def get_ps_var_info(slider_list, var):
 
 
 
+
+
 class ParScanData:
     def __init__(self, x_info, *all_params) -> None:
         
@@ -59,29 +61,55 @@ class ParScanData:
 
         self.x_info = x_info
 
-        self.data = self.get_ps_data()
+        data = self.get_ps_data()
+
+        self.data = self.ensure_real(data)
+
 
 
     def get_ps_data(self):
         
         df_non_0 = self.get_ps_equilibria_df()
 
-        dis_free = self.get_dis_free_df()
+        dis_free = self.get_dis_free_df_with_vec()
 
-        print(dis_free)
+        dis_free_no_vec = self.get_dis_free_df_no_vec()
 
         gap_fillers = GapFillerTraces(dis_free, df_non_0).data
+
+        df_n_0_s, df_n_0_u = self.incorporate_gap_fillers(gap_fillers, df_non_0)
         
-        xs_plot = self.get_output_list("x", gap_fillers, dis_free, df_non_0)
-        host_plot = self.get_output_list("host", gap_fillers, dis_free, df_non_0)
-        vec_plot = self.get_output_list("vec", gap_fillers, dis_free, df_non_0)
-        stabs_plot = self.get_stab_output_list(gap_fillers)
+        xs_plot = self.get_output_list("x", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
+        host_plot = self.get_output_list("host", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
+        vec_plot = self.get_output_list("vec", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
+        stabs_plot = self.get_stab_output_list()
 
         return dict(xs=xs_plot,
                     vec_vals=vec_plot,
                     host_vals=host_plot,
                     stabs=stabs_plot)
     
+
+    @staticmethod
+    def ensure_real(data):
+        out = {}
+        for key in data.keys():
+            if key=="stabs":
+                out[key] = data[key]
+                continue
+            
+            out[key] = []
+            for list_ in data[key]:
+                if any(np.iscomplex(list_)):
+                    raise Exception(f"List should not be complex {list_}")
+                else:
+                    list_ = np.asarray(list_)
+                    list_ = list_.real
+                    out[key].append(list_)
+                    
+        return out
+
+
     # normal eqms
     def get_ps_equilibria_df(self):
         p = get_params(*self.pars_use)
@@ -92,11 +120,7 @@ class ParScanData:
         stabs = []
         
         for x in np.linspace(self.x_info["min"], self.x_info["max"], self.n_points):
-            if self.var in ["nu", "om", "eps"]:
-                setattr(p, f"{self.var}_m", x)
-                setattr(p, f"{self.var}_p", x)
-            else:
-                setattr(p, self.var, x)
+            p = self.update_params(p, x)
 
             try:
                 hh, vv, stab = self.get_terminal_incidence_and_stab(p)
@@ -151,7 +175,7 @@ class ParScanData:
 
 
     # dis free eqms
-    def get_dis_free_df(self):
+    def get_dis_free_df_with_vec(self):
         p = get_params(*self.pars_use)
 
         xs = []
@@ -159,13 +183,10 @@ class ParScanData:
         stabs = []
 
         for x in np.linspace(self.x_info["min"], self.x_info["max"], self.n_points):
-            if self.var in ["nu", "om", "eps"]:
-                setattr(p, f"{self.var}_m", x)
-                setattr(p, f"{self.var}_p", x)
-            else:
-                setattr(p, self.var, x)
+            p = self.update_params(p, x)
             
             kappa = get_kappa(p)
+
             dis_free_eqm = [p.N, 0, kappa, 0]
             stab = StabilityMatrix(p, dis_free_eqm).is_stable
             
@@ -177,33 +198,84 @@ class ParScanData:
                         host=zero_inc,
                         vec=zero_inc,
                         stab=stabs))
+    
+    def get_dis_free_df_no_vec(self):
+        p = get_params(*self.pars_use)
+
+        xs = []
+        zero_inc = []
+        stabs = []
+
+        for x in np.linspace(self.x_info["min"], self.x_info["max"], self.n_points):
+            p = self.update_params(p, x)
+            
+            dis_free_eqm = [p.N, 0, 0, 0]
+            stab = StabilityMatrix(p, dis_free_eqm).is_stable
+            
+            xs.append(x)
+            zero_inc.append(0)
+            stabs.append(stab)
+
+        return pd.DataFrame(dict(x=xs, 
+                        host=zero_inc,
+                        vec=zero_inc,
+                        stab=stabs))
+
+
+    def update_params(self, p, x):
+        if self.var in ["nu", "om", "eps"]:
+            setattr(p, f"{self.var}_m", x)
+            setattr(p, f"{self.var}_p", x)
+        else:
+            setattr(p, self.var, x)
+        return p
+
+
+    def incorporate_gap_fillers(self, gap_fillers, df_non_0):
+        df_s = df_non_0[df_non_0["stab"].isin([True])]
+        df_u = df_non_0[df_non_0["stab"].isin([False])]
+        
+        print(gap_fillers)
+
+        for gap_filled in ["non_0_gaps", "joiner"]:
+            df_s = df_s.append(gap_fillers[gap_filled]["stable"], ignore_index=True)
+            df_u = df_u.append(gap_fillers[gap_filled]["unstable"], ignore_index=True)
+
+        df_s = df_s.sort_values(by=["host", "x"])
+        df_u = df_u.sort_values(by=["host", "x"])
+        
+        return df_s, df_u
+
+        
 
     @staticmethod
-    def get_output_list(key, gap_fillers, dis_free, df_non_0):
+    def get_output_list(key, dis_free, dis_f_nv, df_non_0_s, df_non_0_u):
         
         dis_free_s = dis_free[dis_free["stab"].isin([True])]
         dis_free_u = dis_free[dis_free["stab"].isin([False])]
         
-        df_s = df_non_0[df_non_0["stab"].isin([True, None])]
-        df_u = df_non_0[df_non_0["stab"].isin([False, None])] 
+        dis_free_nv_s = dis_f_nv[dis_f_nv["stab"].isin([True])]
+        dis_free_nv_u = dis_f_nv[dis_f_nv["stab"].isin([False])]
 
-        return gap_fillers[key][:-1] + [
-                    list(dis_free_s[key]),
-                    list(dis_free_u[key]),
-                    gap_fillers[key][-1],
-                    list(df_s[key]),
-                    list(df_u[key])]
+        return [
+                list(dis_free_s[key]),
+                list(dis_free_u[key]),
+                list(dis_free_nv_s[key]),
+                list(dis_free_nv_u[key]),
+                list(df_non_0_s[key]),
+                list(df_non_0_u[key]),
+                ]
     
     @staticmethod
-    def get_stab_output_list(gap_fillers):
-        return gap_fillers["stab"][:-1] + [
-                    True,
-                    False,
-                    gap_fillers["stab"][-1],
-                    True,
-                    False]
-
-
+    def get_stab_output_list():
+        return [
+                True,
+                False,
+                True,
+                False,
+                True,
+                False
+                ]
 
 
 
@@ -216,45 +288,89 @@ class GapFillerTraces:
         self.dis_free_df = dis_free_df
         self.n0_df = n0_df
         self.data = self.get_data()
+        
+
 
     
     def get_data(self):
-        dis_free = self.dis_free_df
-        n0_df = self.n0_df
         
+        ds_fr = self.dis_free_df
+        dis_free_nN = ds_fr[~ds_fr["stab"].isin([None])]
+        _ = self.connect_x_axis_points(dis_free_nN)
+
+        n0_df = self.n0_df
         n0_df_nN = n0_df[~n0_df["stab"].isin([None])]
 
-        xs_0, hosts_0, vecs_0, stabs_0 = self.connect_x_axis_points(dis_free)
+        non_0_gaps = self.connect_non_axis_points(n0_df_nN)
+        joiner = self.connect_x_axis_to_not(n0_df_nN)
 
-        xs_non_0, hosts_non_0, vecs_non_0, stabs_non_0 = self.connect_non_axis_points(n0_df_nN)
+        out = {}
         
-        xs_join, hosts_join, vecs_join, stabs_join = self.connect_x_axis_to_not(n0_df_nN)
+        for data, key in zip([non_0_gaps, joiner],
+                             ["non_0_gaps", "joiner"]):
 
-        x_out = xs_non_0 + xs_0 + xs_join
-        host_out = hosts_non_0 + hosts_0 + hosts_join
-        vec_out = vecs_non_0 + vecs_0 + vecs_join
-        stab_out = stabs_non_0 + stabs_0 + stabs_join
+            df_list = self.convert_to_df(data)
+            dfs_dict = self.get_stable_and_unstable_df(df_list)
+            
+            out[key] = {}
+            if "stable" in dfs_dict.keys():
+                out[key]["stable"] = dfs_dict["stable"]
+            else:
+                out[key]["stable"] = pd.DataFrame()
 
-        return dict(x=x_out, host=host_out, vec=vec_out, stab=stab_out)
+            if "unstable" in dfs_dict.keys():
+                out[key]["unstable"] = dfs_dict["unstable"]
+            else:
+                out[key]["unstable"] = pd.DataFrame()
+
+        return out
+
     
+    @staticmethod
+    def convert_to_df(data):
+        out = []
+        for ii in range(len(data["x"])):
+            df = pd.DataFrame(dict(x=data["x"][ii],
+                    host=data["host"][ii],
+                    vec=data["host"][ii],
+                    stab=data["stab"][ii],
+                    ))
+            out.append(df)
+        return out
+
+
+    @staticmethod
+    def get_stable_and_unstable_df(df_list):
+
+        out = {}
+        for df in df_list:
+            if all(df["stab"])!=all(df["stab"]):
+                stabs = df["stab"]
+                raise Exception(f"not all stable {stabs}")
+
+            if all(df["stab"]):
+                out["stable"] = df
+            else:
+                out["unstable"] = df
+        return out
+
+
 
     def connect_x_axis_to_not(self, n0_df_nN):
-        # connect up x axis to point just above x axis
         x_join, host_join, stab_join = self.get_joiner_0_to_non_0(n0_df_nN, "host")
         _, vec_join, _ = self.get_joiner_0_to_non_0(n0_df_nN, "vec")
-        return [x_join], [host_join], [vec_join], [stab_join]
+        return dict(x=[x_join], host=[host_join], vec=[vec_join], stab=[stab_join])
 
     
     def connect_non_axis_points(self, n0_df_nN):
-        # if no big gap, connect up all points
         xs_non_0, hosts_non_0, stabs_non_0 = self.get_joiner_non_0(n0_df_nN, "host")
         _, vecs_non_0, _ = self.get_joiner_non_0(n0_df_nN, "vec")
-        return xs_non_0, hosts_non_0, vecs_non_0, stabs_non_0
+        return dict(x=xs_non_0, host=hosts_non_0, vec=vecs_non_0, stab=stabs_non_0)
 
     
     
     def connect_x_axis_points(self, dis_free):
-        # plot all x axis points (in one colour then plot over top)
+        
         df = dis_free.sort_values(by=["x", "stab"])
 
         df_s = df[df.stab.isin([True])]
@@ -266,7 +382,7 @@ class GapFillerTraces:
             vecs_0 = [list(df.vec)]
             stabs_0 = [None]
             self.x_mid = None
-            return xs_0, hosts_0, vecs_0, stabs_0
+            return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
 
         if max(list(df_s.x))<min(list(df_u.x)):
             return self.get_x_ax_output(df_s, df_u, True)
@@ -281,7 +397,7 @@ class GapFillerTraces:
             stabs_0 = [None]
             self.x_mid = None
             
-            return xs_0, hosts_0, vecs_0, stabs_0
+            return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
         
 
     
@@ -301,15 +417,18 @@ class GapFillerTraces:
 
         self.x_mid = x_mid
 
-        return xs_0, hosts_0, vecs_0, stabs_0
+        return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
 
     
     
     def get_joiner_non_0(self, df_in, key):
         df = df_in.sort_values(by=[key, "x", "stab"])
 
-        x = list(df.x)
-        y = list(df[key])
+        x = np.asarray(df.x)
+        y = np.asarray(df[key])
+
+        if any(np.iscomplex(y)):
+            return [[]], [[]], [False]
         
         stop_now_x = self.jumps_are_too_big(x)
         stop_now_y = self.jumps_are_too_big(y)
@@ -333,9 +452,12 @@ class GapFillerTraces:
 
     @staticmethod
     def jumps_are_too_big(z):
+        
+        z = z.real
+
         diffs = [abs(z[ii+1] - z[ii])
                         for ii in range(len(z)-1)]
-        
+
         threshold = max(z)/20
 
         if max(diffs)>threshold:
@@ -410,26 +532,17 @@ class GapFillerTraces:
         stab = list(df.stab)
         y = list(df[key])
 
-        threshold = max(y)/50
+        if any(np.iscomplex(y)):
+            return [], [], False
 
-        if min(y)>threshold:
-            yd = np.asarray(y)
-            ind = np.where(yd==min(y))[0][0]
-            
-            print(abs(y[ind]-y[ind-1])<threshold,
-                    abs(y[ind+1]-y[ind])<threshold)
+        y = np.asarray(y)
 
-            # check can look both sides
-            if ind==len(y) and abs(y[ind]-y[ind-1])<threshold:
-                return [], [], False
-            
-            if ind==0 and abs(y[ind+1]-y[ind])<threshold:
-                return [], [], False
+        y = y.real
 
-            if (abs(y[ind]-y[ind-1])<threshold and
-                        abs(y[ind+1]-y[ind])<threshold):
-                return [], [], False
+        close_enough = self.eqm_close_enough_to_0(y)
         
+        if not close_enough:
+            return [], [], False
 
         x1 = self.x_mid if self.x_mid is not None else x[0]
         x2 = x[0]
@@ -443,7 +556,26 @@ class GapFillerTraces:
             y_join.append(y[1])
             stability = stab[1]
 
-
         return x_join, y_join, stability
+
+    def eqm_close_enough_to_0(self, z):
+        threshold = max(z)/50
+
+        if min(z)>threshold:
+            
+            ind = np.where(z==min(z))[0][0]
+
+            # check can look both sides
+            if ind==len(z) and abs(z[ind]-z[ind-1])<threshold:
+                return False
+            
+            if ind==0 and abs(z[ind+1]-z[ind])<threshold:
+                return False
+
+            if (abs(z[ind]-z[ind-1])<threshold and
+                        abs(z[ind+1]-z[ind])<threshold):
+                return False
+        else:
+            return True
 
 

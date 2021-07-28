@@ -17,7 +17,7 @@ def standard_layout(legend_on):
     return go.Layout(
             font = dict(size=12),
             template="plotly_white",
-            height=400,
+            height=440,
             showlegend=legend_on,
             xaxis=dict(showgrid=False),
             margin=dict(l=50, b=10, t=50, r=10, pad=0),
@@ -83,7 +83,7 @@ class TerminalIncidenceFigure:
         self.xs = data["xs"]
         self.ys = data[f"{which_inc}_vals"]
         self.stabs = data["stabs"]
-        
+
         self.x_info = x_info
 
         self.which_inc = which_inc
@@ -96,12 +96,20 @@ class TerminalIncidenceFigure:
         clrs = ["rgb(151,251,151)" if ss is not True 
                     else "rgb(0,89,0)" for ss in self.stabs]
         
-        # names = ["Stable eqm." if ss is True else "Unstable eqm." for ss in self.stabs]
-        names = [str(x) for x in range(len(self.stabs))]
+        dashes = ["solid"]*len(self.stabs)
+        dashes[:2] = ["dash"]*2
+        dashes[2:4] = ["dot"]*2
+
+        names = ["Stable (disease free)",
+                    "Unstable (disease free)",
+                    "Stable (dis. free, no vect.)",
+                    "Unstable (dis. free, no vect.)",
+                    "Stable",
+                    "Unstable"]
 
         showledge = self.get_showlegend()
         
-        trcs = self.get_traces(clrs, names, showledge)
+        trcs = self.get_traces(clrs, names, showledge, dashes)
 
         fig = go.Figure(data=trcs, layout=standard_layout(True))
         
@@ -113,29 +121,24 @@ class TerminalIncidenceFigure:
 
     def get_showlegend(self):
 
-        fillers = [False]*(len(self.xs)-5)
+        showledge = [True]*len(self.xs)
+
+        # showledge[-7:] = [True if len(self.xs[ii]) else False for ii in range(-7,0)] 
         
-        showledge = fillers + [False, False, False, True, True]
-
-        # if one of traces are empty, use other option to fill legend
-        if not self.xs[-2]:
-            showledge[-5] = True
-        if not self.xs[-1]:
-            showledge[-4] = True
-
-        showledge = [True]*len(showledge)
+        # showledge[-3] = False
 
         return showledge
 
 
 
-    def get_traces(self, clrs, names, showledge):
+    def get_traces(self, clrs, names, showledge, dashes):
         traces = []
 
-        for x, y, clr, name, sl in zip(self.xs, self.ys, clrs, names, showledge):
+        for x, y, clr, name, sl, dsh in zip(self.xs, self.ys, clrs, names, showledge, dashes):
+
             trc = go.Scatter(x=x,
                     y=y,
-                    line=dict(color=clr, width=3),
+                    line=dict(color=clr, width=3, dash=dsh),
                     showlegend=sl,
                     name=name,
                     mode="lines")
@@ -194,7 +197,7 @@ class TerminalIncidenceFigure:
         xmin = min(all_xs)
         xmax = max(all_xs)
 
-        xmid = 0.5*(xmin + xmax)
+        xmid = 0.5*(xmin + xmax)       
 
         yuse = min(all_ys) - 0.08 * (max(all_ys) - min(all_ys))
 
@@ -211,8 +214,8 @@ class TerminalIncidenceFigure:
     @staticmethod
     def flatten_list_of_lists(lol):
         out = []
-        for x in lol:
-            out.extend(x)
+        for list_ in lol:
+            out.extend(list_)
         return out
 
 

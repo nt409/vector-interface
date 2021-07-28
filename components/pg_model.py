@@ -4,41 +4,23 @@ import dash_bootstrap_components as dbc
 
 from utils.figures import MODEBAR_CONFIG
 from components.helper_fns import slider_list, get_ctrl_group, get_sliders, \
-    get_par_choice, get_modal, get_run_button
+    get_par_choice, get_modal, get_scenario_radio
 
-m_sliders = get_sliders(slider_list, "")
+m_sliders = get_sliders(slider_list, "m")
 
-m_PT_or_not = html.Div([
-            
-            html.P("Scenario", className="control-label"),
-                
-            dcc.RadioItems(
-                            id="persistent-choice",
-                            options=[
-                                {'label': ' Non-persistent transmission ', 'value': 'NPT'},
-                                {'label': ' Persistent transmission ', 'value': 'PT'},
-                            ],
-                            value='NPT',
-                            labelStyle={'display': 'block'}
-                        )
-        
-            ],
-            className="control-wrapper"
-            )
+m_PT_or_not = get_scenario_radio("m")
+
+param_choice = get_par_choice("m")
 
 
-
-
-param_choice = get_par_choice("")
-
-
-pg1 = get_ctrl_group("Host parameters", 1, "", *m_sliders[:3])
-pg2 = get_ctrl_group("Vector parameters", 2, "", *m_sliders[3:10])
-pg3 = get_ctrl_group("Preference parameters", 3, "", *m_sliders[10:16])
-pg5 = get_ctrl_group("Initial conditions", 5, "", *m_sliders[16:])
+pg1 = get_ctrl_group("Host parameters", 1, "m", *m_sliders[:3])
+pg2 = get_ctrl_group("Vector parameters", 2, "m", *m_sliders[3:10])
+pg3 = get_ctrl_group("Preference parameters", 3, "m", *m_sliders[10:19])
+pg5 = get_ctrl_group("Initial conditions", 5, "m", *m_sliders[19:])
 
 custom_params = html.Div(
-        id="custom-params",
+        id="m-custom-params",
+        className="invisible",
         children=[
     
             html.Span(className="emph-line"),

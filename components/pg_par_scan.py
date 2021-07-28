@@ -4,57 +4,22 @@ import dash_bootstrap_components as dbc
 
 from utils.figures import MODEBAR_CONFIG
 from components.helper_fns import get_run_button, slider_list, get_ctrl_group, get_sliders, \
-    get_par_choice, get_modal
+    get_par_choice, get_modal, get_dropdown, get_scenario_radio
 
+ps_sliders = get_sliders(slider_list, "ps")
 
-ps_sliders = get_sliders(slider_list, "ps-")
+ps_which_var_NPT = get_dropdown("NPT", slider_list[:-13] + slider_list[-7:-4], "control-wrapper")
+ps_which_var_PT = get_dropdown("PT", slider_list[:-7], "invisible")
 
-ps_which_var = html.Div([
-            
-            html.P("Variable choice", className="control-label"),
-                
-            dcc.Dropdown(
-                            id="ps-variable-choice",
-                            options=[
-                                {'label': var["name"], 'value': var["var"]} 
-                                for var in slider_list[:-4]
-                            ],
-                            value='mu',
-                            clearable = False,
-                            searchable=False,
-                            optionHeight=60,
-                        )
-        
-            ],
-            className="control-wrapper"
-            )
+ps_PT_or_not = get_scenario_radio("ps")
 
-ps_PT_or_not = html.Div([
-            
-            html.P("Scenario", className="control-label"),
-                
-            dcc.RadioItems(
-                            id="ps-persistent-choice",
-                            options=[
-                                {'label': ' Non-persistent transmission ', 'value': 'NPT'},
-                                {'label': ' Persistent transmission ', 'value': 'PT'},
-                            ],
-                            value='NPT',
-                            labelStyle={'display': 'block'}
-                        )
-        
-            ],
-            className="control-wrapper"
-            )
-
-
-
-pg1 = get_ctrl_group("Host parameters", 1, "ps-", *ps_sliders[:3])
-pg2 = get_ctrl_group("Vector parameters", 2, "ps-", *ps_sliders[3:10])
-pg3 = get_ctrl_group("Preference parameters", 3, "ps-", *ps_sliders[10:16])
+pg1 = get_ctrl_group("Host parameters", 1, "ps", *ps_sliders[:3])
+pg2 = get_ctrl_group("Vector parameters", 2, "ps", *ps_sliders[3:10])
+pg3 = get_ctrl_group("Preference parameters", 3, "ps", *ps_sliders[10:19])
 
 cust_params = html.Div(
         id="ps-custom-params",
+        className="invisible",
         children=[
     
             html.Span(className="emph-line"),
@@ -67,7 +32,7 @@ cust_params = html.Div(
             pg3,
         ])
 
-param_choice = get_par_choice("ps-")
+param_choice = get_par_choice("ps")
 
 plot_button = get_run_button("ps")
 
@@ -79,7 +44,9 @@ ps_controls = html.Div([
 
         html.H4("Controls", className="uppercase-title"),
 
-        ps_which_var,
+        ps_which_var_NPT,
+        
+        ps_which_var_PT,
 
         param_choice,
 

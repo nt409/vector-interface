@@ -76,4 +76,7 @@ mobile: no ylabel, y axis non scrollable, y in plotly fig title
 
 ## style
 
-controls box fit content
+mob kitchen style?
+
+grey out PS slider of one chosen? or make invisible?
+

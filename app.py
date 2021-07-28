@@ -11,7 +11,7 @@ from components.helper_fns import slider_list
 
 
 from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
-    par_scan_callback, toggle_modal
+    par_scan_callback, make_sliders_invisible_m, make_sliders_invisible_ps
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -36,8 +36,7 @@ app.layout = html.Div([
 
         footer,
 
-        ],
-        )
+        ])
 
 
 ########################################################################################################################
@@ -78,8 +77,8 @@ app.callback(Output('page-content', 'children'),
 
 
 # toggle open/close menus and navs
-ids = ["nav-menu"] + [f"sld-gp-{x}" for x in range(1,6)] + [f"ps-sld-gp-{x}" for x in range(1,6)]
-acts = ["menu-button"] + [f"sld-bt-{x}" for x in range(1,6)] + [f"ps-sld-bt-{x}" for x in range(1,6)]
+ids = ["nav-menu"] + [f"m-sld-gp-{x}" for x in range(1,6)] + [f"ps-sld-gp-{x}" for x in range(1,6)]
+acts = ["menu-button"] + [f"m-sld-bt-{x}" for x in range(1,6)] + [f"ps-sld-bt-{x}" for x in range(1,6)]
 
 for id_name, activator in zip(ids,acts):
     app.callback(Output(id_name, "is_open"),
@@ -88,15 +87,29 @@ for id_name, activator in zip(ids,acts):
     )(toggle_open)
 
 
-
 # make params invisible
-ids = ["custom-params", "ps-custom-params"]
-acts = ["param-choice", "ps-param-choice"]
+ids = ["m-custom-params", "ps-custom-params"]
+acts = ["m-param-choice", "ps-param-choice"]
 
 for id_name, activator in zip(ids, acts):
     app.callback([Output(id_name, "className")],
         [Input(activator, "value")],
         )(toggle_visible)
+
+
+# make nu/om/eps sliders invisible depending on NPT vs PT, also variable dropdown
+app.callback([Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[10:19]]
+            + [Output(f"ps-var-choice-wrapper-{suffix}", 'className') for suffix in ["NPT", "PT"]],
+            [Input(f"ps-param-choice", 'value'),
+            Input(f"ps-persistent-choice", 'value'),
+            ]
+            )(make_sliders_invisible_ps)
+
+
+# make nu/om/eps sliders invisible depending on NPT vs PT
+app.callback([Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[10:19]],
+            [Input(f"m-persistent-choice", 'value')]
+            )(make_sliders_invisible_m)
 
 
 # run model
@@ -111,10 +124,11 @@ app.callback([
               Output("loading-m", "children"),
               Output("loading-m-2", "children"),
             ],
-            [Input('param-choice', 'value')]
-            + [Input('persistent-choice', 'value')]
-            + [Input(f"slider-{x['var']}", 'value') for x in slider_list]
+            [Input('m-param-choice', 'value')]
+            + [Input('m-persistent-choice', 'value')]
+            + [Input(f"m-slider-{x['var']}", 'value') for x in slider_list]
             )(model_callback)
+
 
 # run par scan
 app.callback([
@@ -129,7 +143,8 @@ app.callback([
             [State('ps-param-choice', 'value')]
             + [State('ps-persistent-choice', 'value')]
             + [State(f"ps-slider-{x['var']}", 'value') for x in slider_list[:-4]]
-            + [State('ps-variable-choice', 'value')]
+            + [State('ps-variable-choice-NPT', 'value')]
+            + [State('ps-variable-choice-PT', 'value')]
             )(par_scan_callback)
 
 

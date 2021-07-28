@@ -4,16 +4,21 @@ from components.pg_404 import page_404
 from components.pg_par_scan import par_scan_page
 from components.helper_fns import slider_list
 
-from utils.fns import get_soln, get_params, get_host_fig, \
-    get_vec_fig, get_inc_fig, get_eqm_table, \
-    get_R0_kappa_table, get_init_cnds, get_scan_figure, \
-    get_x_min_max_lab
+from utils.fns_general import get_params
+
+from utils.fns_model import get_soln,  get_host_fig, \
+    get_vec_fig, get_inc_fig, EqmTable, \
+    get_R0_kappa_table, get_init_cnds
+
+from utils.fns_par_scan import ParScanData, get_ps_var_info, get_var_name_for_scan
+
+from utils.figures import TerminalIncidenceFigure
 
 
 
 def model_callback(*params):
 
-    p = get_params(*params[:18])
+    p = get_params(*params[:-4])
 
     if not p.vc.is_valid:
         
@@ -27,8 +32,12 @@ def model_callback(*params):
                 None,
                 None,
                 ]
+    
+    def_or_cust = params[0]
+    N = params[2]
+    IC_pars = params[-4:]
 
-    initial_conds = get_init_cnds(p, *params)
+    initial_conds = get_init_cnds(p, def_or_cust, N, *IC_pars)
 
     soln = get_soln(p, initial_conds)
 
@@ -38,7 +47,7 @@ def model_callback(*params):
     
     fig_incidence = get_inc_fig(soln)
 
-    tbl_eqm = get_eqm_table(p)
+    tbl_eqm = EqmTable(p).tab
 
     tbl_R0_k = get_R0_kappa_table(p)
 
@@ -57,11 +66,9 @@ def model_callback(*params):
             ]
 
 
-
-
 def par_scan_callback(button, *params):
-    p = get_params(*params[:18])
 
+    p = get_params(*params[:-2])
 
     if not p.vc.is_valid:
         return [True,
@@ -71,14 +78,18 @@ def par_scan_callback(button, *params):
                 None,
                 None,
                 ]
+    
+    var_use = get_var_name_for_scan(params[0], params[1], params[-2], params[-1])
+    
+    pars_use = list(params[:-2]) + [var_use]
 
-    var = params[-1]
+    x_info = get_ps_var_info(slider_list, var_use)
 
-    x_info = get_x_min_max_lab(slider_list, var)
+    data = ParScanData(x_info, *pars_use).data
 
-    host_fig = get_scan_figure(p, var, x_info, "host", *params)
-
-    vec_fig = get_scan_figure(p, var, x_info, "vector", *params)
+    host_fig = TerminalIncidenceFigure(data, x_info, "host").fig
+    
+    vec_fig = TerminalIncidenceFigure(data, x_info, "vec").fig
 
     return [False,
             "",
@@ -114,7 +125,35 @@ def toggle_visible(radio):
     else:
         return ["invisible"]
 
-def toggle_modal(n, is_open):
-    # if n:
-        # return not is_open
-    return False
+
+
+def make_sliders_invisible_m(trans_type):
+    if trans_type=="NPT":
+        return ["invisible"]*6 + ["control-wrapper"]*3
+    elif trans_type=="PT":
+        return ["control-wrapper"]*6 + ["invisible"]*3
+    else:
+        raise Exception(f"Transmission type invalid: {trans_type}")
+
+
+
+
+def make_sliders_invisible_ps(default, persistent):
+    NPT_config = ["invisible"]*6 + ["control-wrapper"]*3 + ["control-wrapper"] + ["invisible"]
+    PT_config = ["control-wrapper"]*6 + ["invisible"]*3 + ["invisible"] + ["control-wrapper"]
+    if default=="def-NPT":
+        return NPT_config
+    
+    elif default=="def-PT":
+        return PT_config
+        
+    elif default=="def-C":
+        if persistent=="NPT":
+            return NPT_config
+        elif persistent=="PT":
+            return PT_config
+        else:
+            raise Exception(f"transmission type (custom setting) invalid: {persistent}")
+    else:
+        raise Exception(f"Transmission type (main setting) invalid: {default}")
+    

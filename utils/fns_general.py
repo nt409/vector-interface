@@ -12,13 +12,17 @@ def get_kappa(p):
 
 def get_params(*params):
     default_or_custom = params[0]
-    other_pars = params[1:]
 
     if default_or_custom=="def-NPT":
         return DefaultParams("NPT")
+
     elif default_or_custom=="def-PT":
         return DefaultParams("PT")
+
     elif default_or_custom=="def-C":
-        return CustomParams(*other_pars)
+        trans_type = params[1]
+        other_pars = params[2:]
+        return CustomParams(trans_type, *other_pars)
+
     else:
         raise Exception("invalid transmission type entered")

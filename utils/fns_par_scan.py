@@ -75,17 +75,15 @@ class ParScanData:
 
         dis_free_no_vec = self.get_dis_free_df_no_vec()
 
-        gap_fillers = GapFillerTraces(dis_free, df_non_0).data
+        gap_fillers = GapFillerTraces(dis_free, df_non_0, self.x_info).data
 
         df_n_0_s, df_n_0_u = self.incorporate_gap_fillers(gap_fillers, df_non_0)
         
         xs_plot = self.get_output_list("x", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
         host_plot = self.get_output_list("host", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
-        vec_plot = self.get_output_list("vec", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
         stabs_plot = self.get_stab_output_list()
 
         return dict(xs=xs_plot,
-                    vec_vals=vec_plot,
                     host_vals=host_plot,
                     stabs=stabs_plot)
     
@@ -116,29 +114,25 @@ class ParScanData:
 
         xs = []
         host_out = []
-        vec_out = []
         stabs = []
         
         for x in np.linspace(self.x_info["min"], self.x_info["max"], self.n_points):
             p = self.update_params(p, x)
 
             try:
-                hh, vv, stab = self.get_terminal_incidence_and_stab(p)
+                hh, stab = self.get_terminal_incidence_and_stab(p)
                 host_out += hh
-                vec_out += vv
                 xs += [x]*len(stab)
                 stabs += stab
             except Exception as e:
                 print("nt error", e)
 
                 xs += [x]
-                vec_out += [None]
                 host_out += [None]
                 stabs += [None]
         
         return pd.DataFrame(dict(x=xs,
                                 host=host_out,
-                                vec=vec_out,
                                 stab=stabs))
 
 
@@ -150,14 +144,9 @@ class ParScanData:
         host_term_inc = [I_list[ii]/(S_list[ii] + I_list[ii])
                         for ii in range(len(S_list))]
 
-        X_list = list(df.X)
-        Z_list = list(df.Z)
-        vec_term_inc = [Z_list[ii]/(X_list[ii] + Z_list[ii])
-                        for ii in range(len(Z_list))]
-
         stability = list(df.is_stable)
 
-        return host_term_inc, vec_term_inc, stability
+        return host_term_inc, stability
 
     
     def get_eqm_vals(self, p):
@@ -196,9 +185,9 @@ class ParScanData:
 
         return pd.DataFrame(dict(x=xs, 
                         host=zero_inc,
-                        vec=zero_inc,
                         stab=stabs))
     
+
     def get_dis_free_df_no_vec(self):
         p = get_params(*self.pars_use)
 
@@ -218,14 +207,19 @@ class ParScanData:
 
         return pd.DataFrame(dict(x=xs, 
                         host=zero_inc,
-                        vec=zero_inc,
                         stab=stabs))
-
 
     def update_params(self, p, x):
         if self.var in ["nu", "om", "eps"]:
             setattr(p, f"{self.var}_m", x)
             setattr(p, f"{self.var}_p", x)
+        
+        elif "tau" in self.var:
+            setattr(p, "tau", x)
+        
+        elif "zeta" in self.var:
+            setattr(p, "zeta", x)
+        
         else:
             setattr(p, self.var, x)
         return p
@@ -234,8 +228,6 @@ class ParScanData:
     def incorporate_gap_fillers(self, gap_fillers, df_non_0):
         df_s = df_non_0[df_non_0["stab"].isin([True])]
         df_u = df_non_0[df_non_0["stab"].isin([False])]
-        
-        print(gap_fillers)
 
         for gap_filled in ["non_0_gaps", "joiner"]:
             df_s = df_s.append(gap_fillers[gap_filled]["stable"], ignore_index=True)
@@ -258,10 +250,10 @@ class ParScanData:
         dis_free_nv_u = dis_f_nv[dis_f_nv["stab"].isin([False])]
 
         return [
-                list(dis_free_s[key]),
                 list(dis_free_u[key]),
-                list(dis_free_nv_s[key]),
                 list(dis_free_nv_u[key]),
+                list(dis_free_s[key]),
+                list(dis_free_nv_s[key]),
                 list(df_non_0_s[key]),
                 list(df_non_0_u[key]),
                 ]
@@ -269,10 +261,10 @@ class ParScanData:
     @staticmethod
     def get_stab_output_list():
         return [
-                True,
+                False,
                 False,
                 True,
-                False,
+                True,
                 True,
                 False
                 ]
@@ -284,9 +276,11 @@ class ParScanData:
 
 
 class GapFillerTraces:
-    def __init__(self, dis_free_df, n0_df) -> None:
+    def __init__(self, dis_free_df, n0_df, x_info) -> None:
         self.dis_free_df = dis_free_df
         self.n0_df = n0_df
+        self.x_info = x_info
+
         self.data = self.get_data()
         
 
@@ -332,7 +326,6 @@ class GapFillerTraces:
         for ii in range(len(data["x"])):
             df = pd.DataFrame(dict(x=data["x"][ii],
                     host=data["host"][ii],
-                    vec=data["host"][ii],
                     stab=data["stab"][ii],
                     ))
             out.append(df)
@@ -358,14 +351,12 @@ class GapFillerTraces:
 
     def connect_x_axis_to_not(self, n0_df_nN):
         x_join, host_join, stab_join = self.get_joiner_0_to_non_0(n0_df_nN, "host")
-        _, vec_join, _ = self.get_joiner_0_to_non_0(n0_df_nN, "vec")
-        return dict(x=[x_join], host=[host_join], vec=[vec_join], stab=[stab_join])
+        return dict(x=[x_join], host=[host_join], stab=[stab_join])
 
     
     def connect_non_axis_points(self, n0_df_nN):
         xs_non_0, hosts_non_0, stabs_non_0 = self.get_joiner_non_0(n0_df_nN, "host")
-        _, vecs_non_0, _ = self.get_joiner_non_0(n0_df_nN, "vec")
-        return dict(x=xs_non_0, host=hosts_non_0, vec=vecs_non_0, stab=stabs_non_0)
+        return dict(x=xs_non_0, host=hosts_non_0, stab=stabs_non_0)
 
     
     
@@ -379,10 +370,9 @@ class GapFillerTraces:
         if not df_s.shape[0] or not df_u.shape[0]:
             xs_0 = [list(df.x)]
             hosts_0 = [list(df.host)]
-            vecs_0 = [list(df.vec)]
             stabs_0 = [None]
             self.x_mid = None
-            return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
+            return dict(x=xs_0, host=hosts_0, stab=stabs_0)
 
         if max(list(df_s.x))<min(list(df_u.x)):
             return self.get_x_ax_output(df_s, df_u, True)
@@ -393,11 +383,10 @@ class GapFillerTraces:
         else:
             xs_0 = [list(df.x)]
             hosts_0 = [list(df.host)]
-            vecs_0 = [list(df.vec)]
             stabs_0 = [None]
             self.x_mid = None
             
-            return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
+            return dict(x=xs_0, host=hosts_0, stab=stabs_0)
         
 
     
@@ -412,12 +401,11 @@ class GapFillerTraces:
 
         xs_0 = [x_u, x_s]
         hosts_0 = [[0,0], [0,0]]
-        vecs_0 = [[0,0], [0,0]]
         stabs_0 = [stab, not stab]
 
         self.x_mid = x_mid
 
-        return dict(x=xs_0, host=hosts_0, vec=vecs_0, stab=stabs_0)
+        return dict(x=xs_0, host=hosts_0, stab=stabs_0)
 
     
     
@@ -544,9 +532,23 @@ class GapFillerTraces:
         if not close_enough:
             return [], [], False
 
-        x1 = self.x_mid if self.x_mid is not None else x[0]
         x2 = x[0]
-        
+
+        if df.shape[0]>=2:
+            try:
+                m = (y[1] - y[0])/(x[1] - x[0])
+                c = y[0] - m*x[0]
+                x_linear = -c/m
+                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
+                    x1 = x_linear
+                else:
+                    # maybe don't use if linear doesn't project to correct region??
+                    x1 = x[0]
+            except:
+                x1 = x[0]
+        else:
+            x1 = x[0]
+
         x_join = [x1, x2]
         y_join = [0, y[0]]
         stability = stab[0]
@@ -558,23 +560,28 @@ class GapFillerTraces:
 
         return x_join, y_join, stability
 
+
+
     def eqm_close_enough_to_0(self, z):
-        threshold = max(z)/50
+        threshold = max(z)/15
 
         if min(z)>threshold:
             
             ind = np.where(z==min(z))[0][0]
 
             # check can look both sides
-            if ind==len(z) and abs(z[ind]-z[ind-1])<threshold:
+            if ind==len(z) and abs(z[ind]-z[ind-1])<0.6*threshold:
                 return False
             
-            if ind==0 and abs(z[ind+1]-z[ind])<threshold:
+            if ind==0 and abs(z[ind+1]-z[ind])<0.6*threshold:
                 return False
 
-            if (abs(z[ind]-z[ind-1])<threshold and
-                        abs(z[ind+1]-z[ind])<threshold):
+            if (abs(z[ind]-z[ind-1])<0.6*threshold and
+                        abs(z[ind+1]-z[ind])<0.6*threshold):
                 return False
+            
+            return True
+            
         else:
             return True
 

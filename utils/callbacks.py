@@ -2,7 +2,7 @@ from components.pg_model import model_page
 from components.pg_explan import explan_page
 from components.pg_404 import page_404
 from components.pg_par_scan import par_scan_page
-from components.helper_fns import slider_list
+from components.slr_list import slider_list, SLIDER_IND_MAP
 
 from utils.fns_general import get_params
 
@@ -14,6 +14,8 @@ from utils.fns_par_scan import ParScanData, get_ps_var_info, get_var_name_for_sc
 
 from utils.figures import TerminalIncidenceFigure
 
+
+IM = SLIDER_IND_MAP
 
 
 def model_callback(*params):
@@ -33,9 +35,9 @@ def model_callback(*params):
                 ]
     
 
-
     try:
         return run_model_callback(p, *params)
+
     except:
         return [True,
             "Error in generating solution - try another parameter set",
@@ -94,19 +96,17 @@ def par_scan_callback(button, *params):
         return [True,
                 p.vc.error_message,
                 dict(data=[], layout={}),
-                dict(data=[], layout={}),
                 None,
                 None,
                 ]
 
-    return run_PS_callback(*params)
-    
+    # return run_PS_callback(*params)
+
     try:
         return run_PS_callback(*params)
     except:
         return [True,
             "Error in generating solution - try another parameter set",
-            dict(data=[], layout={}),
             dict(data=[], layout={}),
             None,
             None,
@@ -116,23 +116,24 @@ def par_scan_callback(button, *params):
 
 
 def run_PS_callback(*params):
-
-    var_use = get_var_name_for_scan(params[0], params[1], params[-2], params[-1])
     
-    pars_use = list(params[:-2]) + [var_use]
+    var_use = get_var_name_for_scan(def_or_custom=params[0],
+                                    cust_choice=params[1],
+                                    NPT_var=params[-2],
+                                    PT_var=params[-1])
+    
 
     x_info = get_ps_var_info(slider_list, var_use)
 
+    pars_use = list(params[:-2]) + [var_use]
+    
     data = ParScanData(x_info, *pars_use).data
 
     host_fig = TerminalIncidenceFigure(data, x_info, "host").fig
     
-    vec_fig = TerminalIncidenceFigure(data, x_info, "vec").fig
-
     return [False,
             "",
             host_fig, 
-            vec_fig,
             None,
             None,
             ]
@@ -166,10 +167,18 @@ def toggle_visible(radio):
 
 
 def make_sliders_invisible_m(trans_type):
+    inv = ["invisible"]
+    cw = ["control-wrapper"]
+    
+    NPT_config = cw + inv + cw + inv + inv*6 + cw*3
+    PT_config = inv + cw + inv + cw + cw*6 + inv*3
+
     if trans_type=="NPT":
-        return ["invisible"]*6 + ["control-wrapper"]*3
+        return NPT_config
+
     elif trans_type=="PT":
-        return ["control-wrapper"]*6 + ["invisible"]*3
+        return PT_config
+
     else:
         raise Exception(f"Transmission type invalid: {trans_type}")
 
@@ -177,8 +186,12 @@ def make_sliders_invisible_m(trans_type):
 
 
 def make_sliders_invisible_ps(default, persistent):
-    NPT_config = ["invisible"]*6 + ["control-wrapper"]*3 + ["control-wrapper"] + ["invisible"]
-    PT_config = ["control-wrapper"]*6 + ["invisible"]*3 + ["invisible"] + ["control-wrapper"]
+    inv = ["invisible"]
+    cw = ["control-wrapper"]
+
+    NPT_config = cw + inv + cw + inv + inv*6 + cw*3 + cw + inv
+    PT_config = inv + cw + inv + cw + cw*6 + inv*3 + inv + cw
+
     if default=="def-NPT":
         return NPT_config
     
@@ -192,6 +205,7 @@ def make_sliders_invisible_ps(default, persistent):
             return PT_config
         else:
             raise Exception(f"transmission type (custom setting) invalid: {persistent}")
+    
     else:
         raise Exception(f"Transmission type (main setting) invalid: {default}")
     

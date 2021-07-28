@@ -96,16 +96,23 @@ class TerminalIncidenceFigure:
         clrs = ["rgb(151,251,151)" if ss is not True 
                     else "rgb(0,89,0)" for ss in self.stabs]
         
-        dashes = ["solid"]*len(self.stabs)
-        dashes[:2] = ["dash"]*2
-        dashes[2:4] = ["dot"]*2
+        dashes = [
+                "dash",
+                "dot",
+                "dash",
+                "dot",
+                "solid",
+                "solid"
+                ]
 
-        names = ["Stable (disease free)",
-                    "Unstable (disease free)",
-                    "Stable (dis. free, no vect.)",
-                    "Unstable (dis. free, no vect.)",
+        names = [
+                    "Unstable (vect. present)",
+                    "Unstable (vect. dies out)",
+                    "Stable (vect. present)",
+                    "Stable (vect. dies out)",
                     "Stable",
-                    "Unstable"]
+                    "Unstable",
+                    ]
 
         showledge = self.get_showlegend()
         
@@ -123,9 +130,16 @@ class TerminalIncidenceFigure:
 
         showledge = [True]*len(self.xs)
 
-        # showledge[-7:] = [True if len(self.xs[ii]) else False for ii in range(-7,0)] 
+        # showledge[0] = False
+        # showledge[2] = False
+
+        # if not len(self.xs[-1]):
+        #     # showledge[-1] = False
+        #     showledge[0] = True
         
-        # showledge[-3] = False
+        # if not len(self.xs[-2]):
+        #     # showledge[-2] = False
+        #     showledge[2] = True
 
         return showledge
 

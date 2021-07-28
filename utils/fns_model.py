@@ -22,21 +22,29 @@ def get_soln(p, itl_cnds):
 
 def get_init_cnds(p, default_or_custom, N, *init_cond_pars):
     kappa = get_kappa(p)
-
+    
     if default_or_custom=="def-NPT":
         return [999, 1, kappa-1, 1]
     elif default_or_custom=="def-PT":
         return [999, 1, kappa-1, 1]
     elif default_or_custom=="def-C":
+        check_kappa_positive(kappa)
         out = get_custom_init_conds(kappa, N, *init_cond_pars)
         return out
     else:
         raise Exception("invalid transmission type entered")
 
 
+def check_kappa_positive(kappa):
+    if kappa<0:
+        raise Exception("Kappa negative. Not strictly an error but causes " +
+                "problems... R0 imaginary, vectpr incidence tending to infinity" + 
+                "initial conditions in this form would be neg")
+    
+
 
 def get_custom_init_conds(kappa, N, *init_cond_pars):
-    
+
     host_inc = init_cond_pars[0]
     host_prop = init_cond_pars[1]
     vec_inc = init_cond_pars[2]
@@ -86,7 +94,10 @@ def get_inc_fig(soln):
     xs = [soln.t, soln.t]
     
     y1 = [(soln.I[ii])/(soln.I[ii] + soln.S[ii]) for ii in range(len(soln.S))]
-    y2 = [(soln.Z[ii])/(soln.Z[ii] + soln.X[ii]) for ii in range(len(soln.X))]
+    
+    y2 = [(soln.Z[ii])/(soln.Z[ii] + soln.X[ii]) if
+                     (soln.Z[ii]>0 and soln.X[ii]>0) else 
+                            None for ii in range(len(soln.X))]
     
     ys = [y1, y2]
 
@@ -120,8 +131,9 @@ class EqmTable:
         df = df.drop(columns=["solves_system", "tol", "bio_realistic"])
 
         dis_f_eqm = self.get_dis_free_eqm_dict()
-        
-        df = df.append(dis_f_eqm, ignore_index=True)
+
+        if dis_f_eqm is not None:    
+            df = df.append(dis_f_eqm, ignore_index=True)
         
         dis_f_eqm_nv = self.get_dis_free_eqm_dict_no_vec()
         
@@ -144,6 +156,9 @@ class EqmTable:
         p = self.params
 
         kappa = get_kappa(p)
+
+        if kappa<0:
+            return None
         
         dis_free_eqm = [p.N, 0, kappa, 0]
         
@@ -180,7 +195,7 @@ class EqmTable:
 def get_R0_kappa_table(p):
 
     kappa = get_kappa(p)
-    
+
     R0_val = R0Finder(p).value
 
     data = dict(R0=[R0_val], kappa=[kappa])

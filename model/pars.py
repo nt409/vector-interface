@@ -1,4 +1,4 @@
-from components.helper_fns import slider_list
+from components.slr_list import slider_list, SLIDER_IND_MAP
 
 class DefaultParams:
     def __init__(self, trans_type) -> None:
@@ -49,38 +49,38 @@ class DefaultParams:
 
 
 
+IM = SLIDER_IND_MAP
+
 
 
 class CustomParams:
     def __init__(self, trans_type, *pars) -> None:
 
-        correct_number = 19
+        correct_number = 21
         
         if len(pars)!=correct_number:
             raise Exception(f"Wrong number of parameters specified: {len(pars)}, should be {correct_number}. {pars}")
 
         self.trans_type = trans_type
 
-        self.N = pars[0]
+        self.N = pars[IM["N"]]
 
-        self.rho = pars[1]
-        self.mu = pars[2]
+        self.rho = pars[IM["rho"]]
+        self.mu = pars[IM["mu"]]
 
-        self.alpha = pars[3]
-        self.tau = pars[4]
-        self.sigma = pars[5]        
-        self.zeta = pars[6]
+        self.alpha = pars[IM["alpha"]]
+        self.sigma = pars[IM["sigma"]]
 
-        self.Gamma = pars[7]
-
-        self.delta = pars[8]
-        self.beta = pars[9]
+        self.Gamma = pars[IM["Gamma"]]
+        self.delta = pars[IM["delta"]]
+        self.beta = pars[IM["beta"]]
 
         
         if trans_type=='NPT':
-            nu = pars[16]
-            omega = pars[17]
-            epsilon = pars[18]
+            nu = pars[IM["nu"]]
+            omega = pars[IM["om"]]
+            epsilon = pars[IM["eps"]]
+
             # preference pars - same for NPT
             self.nu_m = nu
             self.nu_p = nu
@@ -94,22 +94,27 @@ class CustomParams:
             # gamma and eta different form for PT vs NPT
             self.gamma = 1
             self.eta = 1 - self.eps_m * self.om_m
+            self.tau = pars[IM["tau-NPT"]]
+            self.zeta = pars[IM["zeta-NPT"]]
 
         else:
             # preference pars - differ for PT
-            self.nu_m = pars[10]
-            self.nu_p = pars[11]
-
-            self.om_m = pars[12]
-            self.om_p = pars[13]
+            self.nu_m = pars[IM["nu_m"]]
+            self.nu_p = pars[IM["nu_p"]]
             
-            self.eps_m = pars[14]
-            self.eps_p = pars[15]
+            self.om_m = pars[IM["om_m"]]
+            self.om_p = pars[IM["om_p"]]
+
+            self.eps_m = pars[IM["eps_m"]]
+            self.eps_p = pars[IM["eps_p"]]
 
             # gamma and eta different form for PT vs NPT
             self.gamma = self.om_p
             self.eta = self.eps_m * self.om_m
+            self.tau = pars[IM["tau-PT"]]
+            self.zeta = pars[IM["zeta-PT"]]
 
+        print(vars(self))
         self.vc = ValidityChecker(self)
 
 
@@ -162,6 +167,10 @@ class ValidityChecker:
                 if self.Param.trans_type=="NPT":
                     self.check_this_var_in_bds(sld_dict, f"{key}_p")
                     self.check_this_var_in_bds(sld_dict, f"{key}_m")
+            
+            elif key in ["tau-NPT", "tau-PT", "zeta-NPT", "zeta-PT"]:
+                var = key.split("-")[0]
+                self.check_this_var_in_bds(sld_dict, f"{var}")
 
             else:
                 self.check_this_var_in_bds(sld_dict, key)

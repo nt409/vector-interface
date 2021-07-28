@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 
 from components.header import header
 from components.footer import footer
-from components.helper_fns import slider_list
+from components.slr_list import SLIDER_IND_MAP, slider_list
 
 
 from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
@@ -96,18 +96,26 @@ for id_name, activator in zip(ids, acts):
         [Input(activator, "value")],
         )(toggle_visible)
 
+IM = SLIDER_IND_MAP
 
 # make nu/om/eps sliders invisible depending on NPT vs PT, also variable dropdown
-app.callback([Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[10:19]]
-            + [Output(f"ps-var-choice-wrapper-{suffix}", 'className') for suffix in ["NPT", "PT"]],
-            [Input(f"ps-param-choice", 'value'),
-            Input(f"ps-persistent-choice", 'value'),
-            ]
-            )(make_sliders_invisible_ps)
+app.callback(
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["tau-NPT"]:IM["sigma"]]] +
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["zeta-NPT"]:IM["Gamma"]]] +
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["nu_m"]:IM["host-inc-0"]]] +
+    [Output(f"ps-var-choice-wrapper-{suffix}", 'className') for suffix in ["NPT", "PT"]],
+    [Input(f"ps-param-choice", 'value'),
+    Input(f"ps-persistent-choice", 'value'),
+    ]
+    )(make_sliders_invisible_ps)
 
 
 # make nu/om/eps sliders invisible depending on NPT vs PT
-app.callback([Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[10:19]],
+app.callback(
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["tau-NPT"]:IM["sigma"]]] +
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["zeta-NPT"]:IM["Gamma"]]] +
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["nu_m"]:IM["host-inc-0"]]]
+            ,
             [Input(f"m-persistent-choice", 'value')]
             )(make_sliders_invisible_m)
 
@@ -135,7 +143,6 @@ app.callback([
               Output("ps-error-modal", "is_open"),
               Output("ps-modal-content", "children"),
               Output("ps-host-fig", "figure"),
-              Output("ps-vec-fig", "figure"),
               Output("loading-ps", "children"),
               Output("loading-ps-2", "children"),
               ],

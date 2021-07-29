@@ -27,9 +27,9 @@ SLIDER_LIST = [
                 dict(step=0.01, min=0.001, max=2, value=1, var='eps_m', axis_label=u'\u03B5\u208B', name=u'\u03B5\u208B: bias of non-viruliferous vector to feed on infected plants'),
                 dict(step=0.01, min=0.001, max=2, value=1, var='eps_p', axis_label=u'\u03B5\u208A', name=u'\u03B5\u208A: bias of viruliferous vector to feed on infected plants'),
                 #
-                dict(step=0.01, min=0.001, max=4, value=1, var='nu', axis_label=u'\u03BD', name=u'\u03BD: bias of vectors to land on infected plants'),
-                dict(step=0.01, min=0.001, max=1, value=0.5, var='om', axis_label=u'\u03C9', name=u'\u03C9: probability vector settles to feed on susceptible plant'),
-                dict(step=0.01, min=0.001, max=2, value=1, var='eps', axis_label=u'\u03B5', name=u'\u03B5: bias of vectors to feed on infected plants'),
+                dict(step=0.01, min=0.001, max=4, value=1, var='nu', axis_label=u'\u03BD', name=u'\u03BD (=\u03BD\u208B=\u03BD\u208A): bias of vectors to land on infected plants'),
+                dict(step=0.01, min=0.001, max=1, value=0.5, var='om', axis_label=u'\u03C9', name=u'\u03C9 (=\u03C9\u208B=\u03C9\u208A): probability vector settles to feed on susceptible plant'),
+                dict(step=0.01, min=0.001, max=2, value=1, var='eps', axis_label=u'\u03B5', name=u'\u03B5 (=\u03B5\u208B=\u03B5\u208A): bias of vectors to feed on infected plants'),
                 # init conds
                 dict(step=0.01, min=0, max=1, value=0.02, var='host-inc-0', axis_label=u'I\u2080/(S\u2080+I\u2080)', name=u'I\u2080/(S\u2080+I\u2080): initial host incidence'),
                 dict(step=0.01, min=0.01, max=1, value=1, var='N-frac', axis_label="IHA", name=u'(S\u2080+I\u2080)/N: initial host amount'),

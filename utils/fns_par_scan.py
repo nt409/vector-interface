@@ -75,7 +75,7 @@ class ParScanData:
 
         dis_free_no_vec = self.get_dis_free_df_no_vec()
 
-        gap_fillers = GapFillerTraces(dis_free, df_non_0, self.x_info).data
+        gap_fillers = GapFillerData(dis_free, df_non_0, self.x_info).data
 
         df_n_0_s, df_n_0_u = self.incorporate_gap_fillers(gap_fillers, df_non_0)
         
@@ -313,7 +313,7 @@ class ParScanData:
 
 
 
-class GapFillerTraces:
+class GapFillerData:
     def __init__(self, dis_free_df, n0_df, x_info) -> None:
         self.dis_free_df = dis_free_df
         self.n0_df = n0_df
@@ -329,12 +329,14 @@ class GapFillerTraces:
         ds_fr = self.dis_free_df
         dis_free_nN = ds_fr[~ds_fr["stab"].isin([None])]
         _ = self.connect_x_axis_points(dis_free_nN)
+        # _ = XAxisGapFiller(dis_free_nN).data
 
         n0_df = self.n0_df
         n0_df_nN = n0_df[~n0_df["stab"].isin([None])]
 
-        non_0_gaps = self.connect_non_axis_points(n0_df_nN)
-        joiner = self.connect_x_axis_to_not(n0_df_nN)
+        non_0_gaps = NonZeroGapFiller(n0_df_nN).data
+        
+        joiner = JoinGapFiller(n0_df_nN).data
 
         out = {}
         
@@ -387,15 +389,6 @@ class GapFillerTraces:
 
 
 
-    def connect_x_axis_to_not(self, n0_df_nN):
-        x_join, host_join, stab_join = self.get_joiner_0_to_non_0(n0_df_nN, "host")
-        return dict(x=[x_join], host=[host_join], stab=[stab_join])
-
-    
-    def connect_non_axis_points(self, n0_df_nN):
-        xs_non_0, hosts_non_0, stabs_non_0 = self.get_joiner_non_0(n0_df_nN, "host")
-        return dict(x=xs_non_0, host=hosts_non_0, stab=stabs_non_0)
-
     
     
     def connect_x_axis_points(self, dis_free):
@@ -447,34 +440,135 @@ class GapFillerTraces:
 
     
     
-    def get_joiner_non_0(self, df_in, key):
-        df = df_in.sort_values(by=[key, "x", "stab"])
 
-        x = np.asarray(df.x)
-        y = np.asarray(df[key])
+
+
+
+class JoinGapFiller:
+    def __init__(self, df) -> None:
+        self.df = df
+        self.data = self.connect_x_axis_to_not(df)
+    
+
+    def connect_x_axis_to_not(self, df_in):
+        df = df_in.sort_values(by=["host", "x"])
+
+        x = list(df.x)
+        stab = list(df.stab)
+        y = list(df["host"])
 
         if any(np.iscomplex(y)):
-            return [[]], [[]], [False]
+            return [], [], False
+
+        y = np.asarray(y)
+
+        y = y.real
+
+        close_enough = self.eqm_close_enough_to_0(y)
+        
+        if not close_enough:
+            return [], [], False
+
+        x2 = x[0]
+
+        if df.shape[0]>=2:
+            try:
+                m = (y[1] - y[0])/(x[1] - x[0])
+                c = y[0] - m*x[0]
+                x_linear = -c/m
+                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
+                    x1 = x_linear
+                else:
+                    # maybe don't use if linear doesn't project to correct region??
+                    x1 = x[0]
+            except:
+                x1 = x[0]
+        else:
+            x1 = x[0]
+
+        x_join = [x1, x2]
+        host_join = [0, y[0]]
+        stability = stab[0]
+
+        if df.shape[0]>=2:
+            x_join.append(x[1])
+            host_join.append(y[1])
+            stability = stab[1]
+
+        return dict(x=[x_join], host=[host_join], stab=[stability])
+        
+
+
+
+    def eqm_close_enough_to_0(self, z):
+        threshold = max(z)/15
+
+        if min(z)>threshold:
+            
+            ind = np.where(z==min(z))[0][0]
+
+            # check can look both sides
+            if ind==len(z) and abs(z[ind]-z[ind-1])<0.6*threshold:
+                return False
+            
+            if ind==0 and abs(z[ind+1]-z[ind])<0.6*threshold:
+                return False
+
+            if (abs(z[ind]-z[ind-1])<0.6*threshold and
+                        abs(z[ind+1]-z[ind])<0.6*threshold):
+                return False
+            
+            return True
+            
+        else:
+            return True
+
+
+
+
+
+
+
+class NonZeroGapFiller:
+    def __init__(self, df) -> None:
+        self.df = df
+        self.data = self.connect_non_axis_points(df)
+    
+    
+    def connect_non_axis_points(self, df_in):
+
+        df = df_in.sort_values(by=["host", "x", "stab"])
+
+        x = np.asarray(df.x)
+        y = np.asarray(df["host"])
+
+        if any(np.iscomplex(y)):
+            return dict(x=[[]], host=[[]], stab=[False])
         
         stop_now_x = self.jumps_are_too_big(x)
         stop_now_y = self.jumps_are_too_big(y)
 
         if stop_now_x or stop_now_y:
-            return [[]], [[]], [False]
+            return dict(x=[[]], host=[[]], stab=[False])
 
-        strd = df_in.sort_values(by=["stab", key])
+
+        strd = df_in.sort_values(by=["stab", "host"])
         df_s = strd[strd.stab.isin([True])]
         df_u = strd[strd.stab.isin([False])]
 
         if not df_s.shape[0] or not df_u.shape[0]:
-            return [[]], [[]], [False]
+            return dict(x=[[]], host=[[]], stab=[False])
 
-        if max(df_s[key])<min(df_u[key]):
-            return self.get_non_0_output(df_s, df_u, key, True)
-        elif max(df_u[key])<min(df_s[key]):
-            return self.get_non_0_output(df_s, df_u, key, True)
+        if max(df_s["host"])<min(df_u["host"]):
+            return self.get_output(df_s, df_u, True)
+
+        elif max(df_u["host"])<min(df_s["host"]):
+            return self.get_output(df_u, df_s, False)
+
         else:
-            return [x], [y], [False]
+            return dict(x=[x], host=[y], stab=[False])
+
+
 
     @staticmethod
     def jumps_are_too_big(z):
@@ -508,119 +602,44 @@ class GapFillerTraces:
 
 
 
-    @staticmethod
-    def get_non_0_output(df_low, df_high, key, stab):
+    
+    def get_output(self, df_low, df_high, stab):
 
         if df_low.shape[0]>=2 and df_high.shape[0]>=2:
             # joining more points makes it look smooth
-            xL = list(df_low["x"])[1]
-            xl = list(df_low["x"])[0]
-            xh = list(df_high["x"])[-1]
-            xH = list(df_high["x"])[-2]
-            xm = 0.5*(xl + xh)
 
-
-            yL = list(df_low[key])[1]
-            yl = list(df_low[key])[0]
-            yh = list(df_high[key])[-1]
-            yH = list(df_high[key])[-2]
-            ym = 0.5*(yl + yh)
-
-            x_out = [[xL, xl, xm], [xm, xh, xH]]
-            y_out = [[yL, yl, ym], [ym, yh, yH]]
+            x_out = self.get_vec_out_depth_2(df_low, df_high, "x")
+            h_out = self.get_vec_out_depth_2(df_low, df_high, "host")
             s_out = [stab, not stab]
-            return x_out, y_out, s_out
+
+            return dict(x=x_out, host=h_out, stab=s_out)
         
         else:
-            xl = list(df_low["x"])[0]
-            xh = list(df_high["x"])[-1]
-            xm = 0.5*(xl + xh)
-
-            yl = list(df_low[key])[0]
-            yh = list(df_high[key])[-1]
-            ym = 0.5*(yl + yh)
-
-            x_out = [[xl, xm], [xm, xh]]
-            y_out = [[yl, ym], [ym, yh]]
+            x_out = self.get_vec_out_depth_1(df_low, df_high, "x")
+            h_out = self.get_vec_out_depth_1(df_low, df_high, "host")
             s_out = [stab, not stab]
-            return x_out, y_out, s_out
-            
 
+            return dict(x=x_out, host=h_out, stab=s_out)
+    
 
+    @staticmethod
+    def get_vec_out_depth_2(df_low, df_high, key):
+        zL = list(df_low[key])[1]
+        zl = list(df_low[key])[0]
 
+        zh = list(df_high[key])[-1]
+        zH = list(df_high[key])[-2]
 
+        zm = 0.5*(zl + zh)
 
+        return [[zL, zl, zm], [zm, zh, zH]]
+    
 
-    def get_joiner_0_to_non_0(self, df_in, key):
-        df = df_in.sort_values(by=[key, "x"])
-
-        x = list(df.x)
-        stab = list(df.stab)
-        y = list(df[key])
-
-        if any(np.iscomplex(y)):
-            return [], [], False
-
-        y = np.asarray(y)
-
-        y = y.real
-
-        close_enough = self.eqm_close_enough_to_0(y)
+    @staticmethod
+    def get_vec_out_depth_1(df_low, df_high, key):
         
-        if not close_enough:
-            return [], [], False
+        zl = list(df_low[key])[0]
+        zh = list(df_high[key])[-1]
+        zm = 0.5*(zl + zh)
 
-        x2 = x[0]
-
-        if df.shape[0]>=2:
-            try:
-                m = (y[1] - y[0])/(x[1] - x[0])
-                c = y[0] - m*x[0]
-                x_linear = -c/m
-                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
-                    x1 = x_linear
-                else:
-                    # maybe don't use if linear doesn't project to correct region??
-                    x1 = x[0]
-            except:
-                x1 = x[0]
-        else:
-            x1 = x[0]
-
-        x_join = [x1, x2]
-        y_join = [0, y[0]]
-        stability = stab[0]
-
-        if df.shape[0]>=2:
-            x_join.append(x[1])
-            y_join.append(y[1])
-            stability = stab[1]
-
-        return x_join, y_join, stability
-
-
-
-    def eqm_close_enough_to_0(self, z):
-        threshold = max(z)/15
-
-        if min(z)>threshold:
-            
-            ind = np.where(z==min(z))[0][0]
-
-            # check can look both sides
-            if ind==len(z) and abs(z[ind]-z[ind-1])<0.6*threshold:
-                return False
-            
-            if ind==0 and abs(z[ind+1]-z[ind])<0.6*threshold:
-                return False
-
-            if (abs(z[ind]-z[ind-1])<0.6*threshold and
-                        abs(z[ind+1]-z[ind])<0.6*threshold):
-                return False
-            
-            return True
-            
-        else:
-            return True
-
-
+        return [[zl, zm], [zm, zh]]

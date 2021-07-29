@@ -1,4 +1,4 @@
-from components.slr_list import slider_list, SLIDER_IND_MAP
+from components.slr_list import SLIDER_LIST, SLIDER_IND_MAP
 
 class DefaultParams:
     def __init__(self, trans_type) -> None:
@@ -45,13 +45,28 @@ class DefaultParams:
         self.vc = ValidityChecker(self)
 
 
+    def update_eta_om_m_eps_m(self, om_m, eps_m):
+        self.om_m = om_m
+        self.eps_m = eps_m
+
+        if self.trans_type=="NPT":
+            self.eta = 1 - eps_m * om_m
+        elif self.trans_type=="PT":
+            self.eta = eps_m * om_m
+
+
+    def update_om_p(self, om_p):
+        self.om_p = om_p
+
+        if self.trans_type=="PT":
+            self.gamma = om_p
+
+
 
 
 
 
 IM = SLIDER_IND_MAP
-
-
 
 class CustomParams:
     def __init__(self, trans_type, *pars) -> None:
@@ -91,13 +106,15 @@ class CustomParams:
             self.eps_m = epsilon
             self.eps_p = epsilon
 
+            # diff defaults
+            self.tau = pars[IM["tau-NPT"]]
+            self.zeta = pars[IM["zeta-NPT"]]
+            
             # gamma and eta different form for PT vs NPT
             self.gamma = 1
             self.eta = 1 - self.eps_m * self.om_m
-            self.tau = pars[IM["tau-NPT"]]
-            self.zeta = pars[IM["zeta-NPT"]]
 
-        else:
+        elif trans_type=="PT":
             # preference pars - differ for PT
             self.nu_m = pars[IM["nu_m"]]
             self.nu_p = pars[IM["nu_p"]]
@@ -108,17 +125,36 @@ class CustomParams:
             self.eps_m = pars[IM["eps_m"]]
             self.eps_p = pars[IM["eps_p"]]
 
+            # diff defaults
+            self.tau = pars[IM["tau-PT"]]
+            self.zeta = pars[IM["zeta-PT"]]
+
             # gamma and eta different form for PT vs NPT
             self.gamma = self.om_p
             self.eta = self.eps_m * self.om_m
-            self.tau = pars[IM["tau-PT"]]
-            self.zeta = pars[IM["zeta-PT"]]
+        else:
+            raise Exception(f"Invalid transmission type: {trans_type}")
 
         print(vars(self))
         self.vc = ValidityChecker(self)
 
 
 
+    def update_eta_om_m_eps_m(self, om_m, eps_m):
+        self.om_m = om_m
+        self.eps_m = eps_m
+
+        if self.trans_type=="NPT":
+            self.eta = 1 - eps_m * om_m
+        elif self.trans_type=="PT":
+            self.eta = eps_m * om_m
+
+
+    def update_om_p(self, om_p):
+        self.om_p = om_p
+
+        if self.trans_type=="PT":
+            self.gamma = om_p
 
 
 
@@ -160,7 +196,7 @@ class ValidityChecker:
 
 
     def check_variables_within_bds(self):
-        for sld_dict in slider_list[:-4]:
+        for sld_dict in SLIDER_LIST[:-4]:
             key = sld_dict['var']
             
             if key in ["nu", "om", "eps"]:

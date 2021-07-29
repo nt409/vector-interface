@@ -4,27 +4,27 @@ import dash_bootstrap_components as dbc
 
 from utils.figures import MODEBAR_CONFIG
 
-from components.slr_list import slider_list, SLIDER_IND_MAP
+from components.slr_list import SLIDER_LIST, SLIDER_IND_MAP
 from components.helper_fns import get_run_button, get_ctrl_group, get_sliders, \
     get_par_choice, get_modal, get_dropdown, get_scenario_radio
 
-ps_sliders = get_sliders(slider_list, "ps")
+ps_sliders = get_sliders(SLIDER_LIST, "ps")
 
 
 IM = SLIDER_IND_MAP
 
-NPT_dd_vars = (slider_list[:IM["tau-NPT"]] 
-    + [slider_list[IM["tau-NPT"]],
-        slider_list[IM["sigma"]],
-        slider_list[IM["zeta-NPT"]]] 
-    + slider_list[IM["Gamma"]:IM["nu_m"]]
-    + slider_list[IM["nu"]:IM["host-inc-0"]])
+NPT_dd_vars = (SLIDER_LIST[:IM["tau-NPT"]] 
+    + [SLIDER_LIST[IM["tau-NPT"]],
+        SLIDER_LIST[IM["sigma"]],
+        SLIDER_LIST[IM["zeta-NPT"]]] 
+    + SLIDER_LIST[IM["Gamma"]:IM["nu_m"]]
+    + SLIDER_LIST[IM["nu"]:IM["host-inc-0"]])
 
-PT_dd_vars =  (slider_list[:IM["tau-NPT"]] 
-    + [slider_list[IM["tau-PT"]],
-        slider_list[IM["sigma"]],
-        slider_list[IM["zeta-PT"]]] 
-    + slider_list[IM["Gamma"]:IM["host-inc-0"]])
+PT_dd_vars =  (SLIDER_LIST[:IM["tau-NPT"]] 
+    + [SLIDER_LIST[IM["tau-PT"]],
+        SLIDER_LIST[IM["sigma"]],
+        SLIDER_LIST[IM["zeta-PT"]]] 
+    + SLIDER_LIST[IM["Gamma"]:IM["host-inc-0"]])
 
 ps_which_var_NPT = get_dropdown("NPT", NPT_dd_vars, "control-wrapper")
 ps_which_var_PT = get_dropdown("PT", PT_dd_vars, "invisible")

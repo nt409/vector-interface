@@ -1,6 +1,6 @@
 
 
-slider_list = [
+SLIDER_LIST = [
                 # host
                 dict(step=10, min=1, max=2000, value=1000, var='N', axis_label='N', name='N: number of plants (in absence of virus)'),
                 dict(step=0.001, min=0.001, max=0.05, value=0.01, var='rho', axis_label=u'\u03C1', name=u'\u03C1: natural plant death rate'),
@@ -39,5 +39,5 @@ slider_list = [
 
 
 SLIDER_IND_MAP = {}
-for ii in range(len(slider_list)):    
-    SLIDER_IND_MAP[slider_list[ii]['var']] = ii
+for ii in range(len(SLIDER_LIST)):    
+    SLIDER_IND_MAP[SLIDER_LIST[ii]['var']] = ii

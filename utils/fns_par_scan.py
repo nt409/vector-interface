@@ -210,19 +210,57 @@ class ParScanData:
                         stab=stabs))
 
     def update_params(self, p, x):
-        if self.var in ["nu", "om", "eps"]:
-            setattr(p, f"{self.var}_m", x)
-            setattr(p, f"{self.var}_p", x)
+
+        # the following variables have side effects:
+        # - om_p if PT
+        # - eps_m
+        # - om_m
         
-        elif "tau" in self.var:
+        # special cases:
+        # - zeta/tau - two inputs, pick appropriate one
+        # - nu - update nu_m and nu_p
+
+        var_to_update = self.var
+        
+        if var_to_update=="om":
+            # double update
+            p.update_eta_om_m_eps_m(x, p.eps_m)
+            p.update_om_p(x)
+        
+        elif var_to_update=="eps":
+            # double update
+            p.update_eta_om_m_eps_m(p.om_m, x)
+            setattr(p, f"eps_p", x)
+        
+        elif var_to_update=="nu":
+            # double update
+            setattr(p, "nu_m", x)
+            setattr(p, "nu_p", x)
+        
+        elif var_to_update=="eps_m":
+            p.update_eta_om_m_eps_m(p.om_m, x)
+
+        elif var_to_update=="om_m":
+            p.update_eta_om_m_eps_m(x, p.eps_m)
+
+        elif var_to_update=="om_p":
+            p.update_om_p(x)
+
+        elif "tau" in var_to_update:
+            # so if var_to_update is tau, tau-NPT or tau-PT
             setattr(p, "tau", x)
         
-        elif "zeta" in self.var:
+        elif "zeta" in var_to_update:
+            # so if var_to_update is zeta, zeta-NPT or zeta-PT
             setattr(p, "zeta", x)
         
         else:
-            setattr(p, self.var, x)
+            setattr(p, var_to_update, x)
+
         return p
+
+
+
 
 
     def incorporate_gap_fillers(self, gap_fillers, df_non_0):

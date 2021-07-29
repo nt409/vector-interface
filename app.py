@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 
 from components.header import header
 from components.footer import footer
-from components.slr_list import SLIDER_IND_MAP, slider_list
+from components.slr_list import SLIDER_IND_MAP, SLIDER_LIST
 
 
 from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
@@ -100,9 +100,9 @@ IM = SLIDER_IND_MAP
 
 # make nu/om/eps sliders invisible depending on NPT vs PT, also variable dropdown
 app.callback(
-    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["tau-NPT"]:IM["sigma"]]] +
-    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["zeta-NPT"]:IM["Gamma"]]] +
-    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["nu_m"]:IM["host-inc-0"]]] +
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["tau-NPT"]:IM["sigma"]]] +
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["zeta-NPT"]:IM["Gamma"]]] +
+    [Output(f"ps-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["nu_m"]:IM["host-inc-0"]]] +
     [Output(f"ps-var-choice-wrapper-{suffix}", 'className') for suffix in ["NPT", "PT"]],
     [Input(f"ps-param-choice", 'value'),
     Input(f"ps-persistent-choice", 'value'),
@@ -112,9 +112,9 @@ app.callback(
 
 # make nu/om/eps sliders invisible depending on NPT vs PT
 app.callback(
-            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["tau-NPT"]:IM["sigma"]]] +
-            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["zeta-NPT"]:IM["Gamma"]]] +
-            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in slider_list[IM["nu_m"]:IM["host-inc-0"]]]
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["tau-NPT"]:IM["sigma"]]] +
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["zeta-NPT"]:IM["Gamma"]]] +
+            [Output(f"m-slider-comp-wrapper-{x['var']}", 'className') for x in SLIDER_LIST[IM["nu_m"]:IM["host-inc-0"]]]
             ,
             [Input(f"m-persistent-choice", 'value')]
             )(make_sliders_invisible_m)
@@ -134,7 +134,7 @@ app.callback([
             ],
             [Input('m-param-choice', 'value')]
             + [Input('m-persistent-choice', 'value')]
-            + [Input(f"m-slider-{x['var']}", 'value') for x in slider_list]
+            + [Input(f"m-slider-{x['var']}", 'value') for x in SLIDER_LIST]
             )(model_callback)
 
 
@@ -149,7 +149,7 @@ app.callback([
             [Input('ps-run-button', 'n_clicks')],
             [State('ps-param-choice', 'value')]
             + [State('ps-persistent-choice', 'value')]
-            + [State(f"ps-slider-{x['var']}", 'value') for x in slider_list[:-4]]
+            + [State(f"ps-slider-{x['var']}", 'value') for x in SLIDER_LIST[:-4]]
             + [State('ps-variable-choice-NPT', 'value')]
             + [State('ps-variable-choice-PT', 'value')]
             )(par_scan_callback)

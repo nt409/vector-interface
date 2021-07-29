@@ -2,7 +2,7 @@ from components.pg_model import model_page
 from components.pg_explan import explan_page
 from components.pg_404 import page_404
 from components.pg_par_scan import par_scan_page
-from components.slr_list import slider_list, SLIDER_IND_MAP
+from components.slr_list import SLIDER_LIST, SLIDER_IND_MAP
 
 from utils.fns_general import get_params
 
@@ -100,7 +100,7 @@ def par_scan_callback(button, *params):
                 None,
                 ]
 
-    # return run_PS_callback(*params)
+    return run_PS_callback(*params)
 
     try:
         return run_PS_callback(*params)
@@ -123,7 +123,7 @@ def run_PS_callback(*params):
                                     PT_var=params[-1])
     
 
-    x_info = get_ps_var_info(slider_list, var_use)
+    x_info = get_ps_var_info(SLIDER_LIST, var_use)
 
     pars_use = list(params[:-2]) + [var_use]
     

@@ -4,11 +4,11 @@ import dash_bootstrap_components as dbc
 
 from utils.figures import MODEBAR_CONFIG
 
-from components.slr_list import slider_list, SLIDER_IND_MAP
+from components.slr_list import SLIDER_LIST, SLIDER_IND_MAP
 from components.helper_fns import get_ctrl_group, get_sliders, \
     get_par_choice, get_modal, get_scenario_radio
 
-m_sliders = get_sliders(slider_list, "m")
+m_sliders = get_sliders(SLIDER_LIST, "m")
 
 m_PT_or_not = get_scenario_radio("m")
 

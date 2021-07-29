@@ -135,7 +135,6 @@ class CustomParams:
         else:
             raise Exception(f"Invalid transmission type: {trans_type}")
 
-        print(vars(self))
         self.vc = ValidityChecker(self)
 
 
@@ -187,12 +186,27 @@ class ValidityChecker:
             self.error_message = u"Cannot have \u03C9\u208A\u03B5\u208A \u2265 1"
             return None
 
+        kappa = self.get_kappa()
+        
+        if kappa<=0:
+            self.is_valid = False
+            self.error_message = u"\u03BA<0: although this is valid, it leads to extinction of the vectors. Try lowering \u03B1, \u03B4 or increasing \u03C3, \u03C9\u208B"
+            return None
+
+
         self.check_variables_within_bds()
 
         if p.trans_type=="NPT":
             self.check_pref_vars_equal()
         
-
+    
+    def get_kappa(self):
+        p = self.Param
+        mult = (p.alpha/p.sigma)
+        inner_bracket = (1/p.om_m) - 1
+        bracket = 1 + p.delta * inner_bracket
+        out = p.zeta * (1 - mult * bracket)
+        return out
 
 
     def check_variables_within_bds(self):

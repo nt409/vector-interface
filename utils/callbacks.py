@@ -38,7 +38,9 @@ def model_callback(*params):
     try:
         return run_model_callback(p, *params)
 
-    except:
+    except Exception as e:
+        print(f"Model callback error: {e}")
+        
         return [True,
             "Error in generating solution - try another parameter set",
             dict(data=[], layout={}),
@@ -100,11 +102,11 @@ def par_scan_callback(button, *params):
                 None,
                 ]
 
-    return run_PS_callback(*params)
-
     try:
         return run_PS_callback(*params)
-    except:
+    except Exception as e:
+        print(f"PS callback error: {e}")
+
         return [True,
             "Error in generating solution - try another parameter set",
             dict(data=[], layout={}),

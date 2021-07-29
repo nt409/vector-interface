@@ -75,7 +75,10 @@ class ParScanData:
 
         dis_free_no_vec = self.get_dis_free_df_no_vec()
 
-        gap_fillers = GapFillerData(dis_free, df_non_0, self.x_info).data
+        n0_df_nN = df_non_0[~df_non_0["stab"].isin([None])]
+
+        gap_fillers = [NonZeroGapFiller(n0_df_nN).data,
+                        JoinGapFiller(n0_df_nN, self.x_info).data]
 
         df_n_0_s, df_n_0_u = self.incorporate_gap_fillers(gap_fillers, df_non_0)
         
@@ -87,25 +90,6 @@ class ParScanData:
                     host_vals=host_plot,
                     stabs=stabs_plot)
     
-
-    @staticmethod
-    def ensure_real(data):
-        out = {}
-        for key in data.keys():
-            if key=="stabs":
-                out[key] = data[key]
-                continue
-            
-            out[key] = []
-            for list_ in data[key]:
-                if any(np.iscomplex(list_)):
-                    raise Exception(f"List should not be complex {list_}")
-                else:
-                    list_ = np.asarray(list_)
-                    list_ = list_.real
-                    out[key].append(list_)
-                    
-        return out
 
 
     # normal eqms
@@ -266,17 +250,53 @@ class ParScanData:
     def incorporate_gap_fillers(self, gap_fillers, df_non_0):
         df_s = df_non_0[df_non_0["stab"].isin([True])]
         df_u = df_non_0[df_non_0["stab"].isin([False])]
-
-        for gap_filled in ["non_0_gaps", "joiner"]:
-            df_s = df_s.append(gap_fillers[gap_filled]["stable"], ignore_index=True)
-            df_u = df_u.append(gap_fillers[gap_filled]["unstable"], ignore_index=True)
-
-        df_s = df_s.sort_values(by=["host", "x"])
-        df_u = df_u.sort_values(by=["host", "x"])
         
-        return df_s, df_u
+        hf_s = self.sort_dfs_by_host_first(df_s)
+        hf_u = self.sort_dfs_by_host_first(df_u)
 
+        for gap_flr in gap_fillers:
+            df_s = df_s.append(gap_flr["stable"], ignore_index=True)
+            df_u = df_u.append(gap_flr["unstable"], ignore_index=True)
+
+        df_s_out = self.get_sorted_df(df_s, hf_s)
+        df_u_out = self.get_sorted_df(df_u, hf_u)
+
+        return df_s_out, df_u_out
+
+
+
+    def sort_dfs_by_host_first(self, df):
+        by_h = df.sort_values(by=["host", "x"])
+
+        if not by_h.shape[0]:
+            return True
         
+        if not self.big_x_jumps(list(by_h.x)):
+            return True
+        else:
+            return False
+
+
+    @staticmethod
+    def big_x_jumps(x):
+        # x was linspaced, so can just check if all jumps same size
+
+        diffs = [abs(x[ii+1] - x[ii]) for ii in range(len(x)-1)]
+
+        if min(diffs)!=max(diffs):
+            return True
+        else:
+            return False
+    
+    
+    @staticmethod
+    def get_sorted_df(df, host_first):
+
+        if host_first:
+            return df.sort_values(by=["host", "x"])
+        else:
+            return df.sort_values(by=["x", "host"])
+
 
     @staticmethod
     def get_output_list(key, dis_free, dis_f_nv, df_non_0_s, df_non_0_u):
@@ -309,156 +329,71 @@ class ParScanData:
 
 
 
-
-
-
-
-class GapFillerData:
-    def __init__(self, dis_free_df, n0_df, x_info) -> None:
-        self.dis_free_df = dis_free_df
-        self.n0_df = n0_df
-        self.x_info = x_info
-
-        self.data = self.get_data()
-        
-
-
-    
-    def get_data(self):
-        
-        ds_fr = self.dis_free_df
-        dis_free_nN = ds_fr[~ds_fr["stab"].isin([None])]
-        _ = self.connect_x_axis_points(dis_free_nN)
-        # _ = XAxisGapFiller(dis_free_nN).data
-
-        n0_df = self.n0_df
-        n0_df_nN = n0_df[~n0_df["stab"].isin([None])]
-
-        non_0_gaps = NonZeroGapFiller(n0_df_nN).data
-        
-        joiner = JoinGapFiller(n0_df_nN).data
-
-        out = {}
-        
-        for data, key in zip([non_0_gaps, joiner],
-                             ["non_0_gaps", "joiner"]):
-
-            df_list = self.convert_to_df(data)
-            dfs_dict = self.get_stable_and_unstable_df(df_list)
-            
-            out[key] = {}
-            if "stable" in dfs_dict.keys():
-                out[key]["stable"] = dfs_dict["stable"]
-            else:
-                out[key]["stable"] = pd.DataFrame()
-
-            if "unstable" in dfs_dict.keys():
-                out[key]["unstable"] = dfs_dict["unstable"]
-            else:
-                out[key]["unstable"] = pd.DataFrame()
-
-        return out
-
-    
     @staticmethod
-    def convert_to_df(data):
-        out = []
-        for ii in range(len(data["x"])):
-            df = pd.DataFrame(dict(x=data["x"][ii],
-                    host=data["host"][ii],
-                    stab=data["stab"][ii],
-                    ))
-            out.append(df)
-        return out
-
-
-    @staticmethod
-    def get_stable_and_unstable_df(df_list):
-
+    def ensure_real(data):
         out = {}
-        for df in df_list:
-            if all(df["stab"])!=all(df["stab"]):
-                stabs = df["stab"]
-                raise Exception(f"not all stable {stabs}")
-
-            if all(df["stab"]):
-                out["stable"] = df
-            else:
-                out["unstable"] = df
+        for key in data.keys():
+            if key=="stabs":
+                out[key] = data[key]
+                continue
+            
+            out[key] = []
+            for list_ in data[key]:
+                if any(np.iscomplex(list_)):
+                    raise Exception(f"List should not be complex {list_}")
+                else:
+                    list_ = np.asarray(list_)
+                    list_ = list_.real
+                    out[key].append(list_)
+                    
         return out
 
 
 
+
+
+def get_empty_gap_fill_dict():
+    return dict(stable=pd.DataFrame(dict(x=[], host=[], stab=[])),
+                    unstable=pd.DataFrame(dict(x=[], host=[], stab=[])))
+
+
+def get_dict_of_dfs(xs, ys, stabs):
+
+    if len(stabs)>2:
+        print("list shouldn't be this longer than 2?")
     
+    out = get_empty_gap_fill_dict()
+
+    for x, y, stab in zip(xs, ys, stabs):
+        if not x:
+            continue
+
+        if stab:
+            out["stable"] = pd.DataFrame(dict(x=x, host=y, stab=stab))
+        elif not stab:
+            out["unstable"] = pd.DataFrame(dict(x=x, host=y, stab=stab))
     
-    def connect_x_axis_points(self, dis_free):
-        
-        df = dis_free.sort_values(by=["x", "stab"])
+    return out
 
-        df_s = df[df.stab.isin([True])]
-        df_u = df[df.stab.isin([False])]
-        
-        if not df_s.shape[0] or not df_u.shape[0]:
-            xs_0 = [list(df.x)]
-            hosts_0 = [list(df.host)]
-            stabs_0 = [None]
-            self.x_mid = None
-            return dict(x=xs_0, host=hosts_0, stab=stabs_0)
-
-        if max(list(df_s.x))<min(list(df_u.x)):
-            return self.get_x_ax_output(df_s, df_u, True)
-
-        elif max(list(df_u.x))<min(list(df_s.x)):
-            return self.get_x_ax_output(df_u, df_s, False)
-
-        else:
-            xs_0 = [list(df.x)]
-            hosts_0 = [list(df.host)]
-            stabs_0 = [None]
-            self.x_mid = None
-            
-            return dict(x=xs_0, host=hosts_0, stab=stabs_0)
-        
-
-    
-    
-    def get_x_ax_output(self, df_low, df_high, stab):
-        x_lo = max(list(df_low.x))
-        x_hi = min(list(df_high.x))
-        x_mid = 0.5*(x_lo+x_hi)
-
-        x_u = [x_lo, x_mid]
-        x_s = [x_mid, x_hi]
-
-        xs_0 = [x_u, x_s]
-        hosts_0 = [[0,0], [0,0]]
-        stabs_0 = [stab, not stab]
-
-        self.x_mid = x_mid
-
-        return dict(x=xs_0, host=hosts_0, stab=stabs_0)
-
-    
-    
 
 
 
 
 class JoinGapFiller:
-    def __init__(self, df) -> None:
+    def __init__(self, df, x_info) -> None:
         self.df = df
+        self.x_info = x_info
+        # dictionary containing single df (ordered by stability)
         self.data = self.connect_x_axis_to_not(df)
     
 
     def connect_x_axis_to_not(self, df_in):
         df = df_in.sort_values(by=["host", "x"])
 
-        x = list(df.x)
-        stab = list(df.stab)
-        y = list(df["host"])
+        y = np.asarray(df["host"])
 
         if any(np.iscomplex(y)):
-            return [], [], False
+            return get_empty_gap_fill_dict()
 
         y = np.asarray(y)
 
@@ -467,61 +402,77 @@ class JoinGapFiller:
         close_enough = self.eqm_close_enough_to_0(y)
         
         if not close_enough:
-            return [], [], False
+            return get_empty_gap_fill_dict()
 
-        x2 = x[0]
 
-        if df.shape[0]>=2:
-            try:
-                m = (y[1] - y[0])/(x[1] - x[0])
-                c = y[0] - m*x[0]
-                x_linear = -c/m
-                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
-                    x1 = x_linear
-                else:
-                    # maybe don't use if linear doesn't project to correct region??
-                    x1 = x[0]
-            except:
-                x1 = x[0]
-        else:
-            x1 = x[0]
+        x = list(df.x)
+        stab = list(df.stab)
 
-        x_join = [x1, x2]
+
+        x_join = self.get_x_vals(x, y)
         host_join = [0, y[0]]
         stability = stab[0]
+
 
         if df.shape[0]>=2:
             x_join.append(x[1])
             host_join.append(y[1])
             stability = stab[1]
 
-        return dict(x=[x_join], host=[host_join], stab=[stability])
+        # this dict will only contain one df
+        out = get_dict_of_dfs([x_join], [host_join], [stability])
+        return out
         
 
+    def get_x_vals(self, x, y):
+
+        if len(x)>=2:
+            try:
+                m = (y[1] - y[0])/(x[1] - x[0])
+                c = y[0] - m*x[0]
+                x_linear = -c/m
+
+                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
+                    x0 = x_linear
+                else:
+                    # don't use if linear doesn't project to correct region
+                    x0 = None
+
+            except Exception as e:
+                print(f"linear error: {e}")
+                x0 = x[0]
+        else:
+            x0 = x[0]
+
+        return [x0, x[0]]
 
 
     def eqm_close_enough_to_0(self, z):
         threshold = max(z)/15
 
         if min(z)>threshold:
+            # if not very close to 0, then see if it is steep nearby
+            # if not steep, then return False, since likely this eqm never touches 0
             
             ind = np.where(z==min(z))[0][0]
 
+            local_threshold = max(z)/50
+
             # check can look both sides
-            if ind==len(z) and abs(z[ind]-z[ind-1])<0.6*threshold:
+            if ind==len(z) and abs(z[ind]-z[ind-1])<local_threshold:
                 return False
             
-            if ind==0 and abs(z[ind+1]-z[ind])<0.6*threshold:
+            if ind==0 and abs(z[ind+1]-z[ind])<local_threshold:
                 return False
 
-            if (abs(z[ind]-z[ind-1])<0.6*threshold and
-                        abs(z[ind+1]-z[ind])<0.6*threshold):
+            if (abs(z[ind]-z[ind-1])<local_threshold and
+                        abs(z[ind+1]-z[ind])<local_threshold):
                 return False
             
             return True
+        
+        return True
             
-        else:
-            return True
 
 
 
@@ -532,6 +483,7 @@ class JoinGapFiller:
 class NonZeroGapFiller:
     def __init__(self, df) -> None:
         self.df = df
+        # dictionary containing 1 or 2 dfs (ordered by stability)
         self.data = self.connect_non_axis_points(df)
     
     
@@ -543,13 +495,13 @@ class NonZeroGapFiller:
         y = np.asarray(df["host"])
 
         if any(np.iscomplex(y)):
-            return dict(x=[[]], host=[[]], stab=[False])
+            return get_empty_gap_fill_dict()
         
         stop_now_x = self.jumps_are_too_big(x)
         stop_now_y = self.jumps_are_too_big(y)
 
         if stop_now_x or stop_now_y:
-            return dict(x=[[]], host=[[]], stab=[False])
+            return get_empty_gap_fill_dict()
 
 
         strd = df_in.sort_values(by=["stab", "host"])
@@ -557,17 +509,10 @@ class NonZeroGapFiller:
         df_u = strd[strd.stab.isin([False])]
 
         if not df_s.shape[0] or not df_u.shape[0]:
-            return dict(x=[[]], host=[[]], stab=[False])
+            return get_empty_gap_fill_dict()
 
-        if max(df_s["host"])<min(df_u["host"]):
-            return self.get_output(df_s, df_u, True)
-
-        elif max(df_u["host"])<min(df_s["host"]):
-            return self.get_output(df_u, df_s, False)
-
-        else:
-            return dict(x=[x], host=[y], stab=[False])
-
+        out = self.get_output(df_s, df_u)
+        return get_dict_of_dfs(*out)
 
 
     @staticmethod
@@ -603,23 +548,22 @@ class NonZeroGapFiller:
 
 
     
-    def get_output(self, df_low, df_high, stab):
+    def get_output(self, df_low, df_high):
+        s_out = [True, False]
 
         if df_low.shape[0]>=2 and df_high.shape[0]>=2:
             # joining more points makes it look smooth
 
             x_out = self.get_vec_out_depth_2(df_low, df_high, "x")
             h_out = self.get_vec_out_depth_2(df_low, df_high, "host")
-            s_out = [stab, not stab]
 
-            return dict(x=x_out, host=h_out, stab=s_out)
+            return x_out, h_out, s_out
         
         else:
             x_out = self.get_vec_out_depth_1(df_low, df_high, "x")
             h_out = self.get_vec_out_depth_1(df_low, df_high, "host")
-            s_out = [stab, not stab]
 
-            return dict(x=x_out, host=h_out, stab=s_out)
+            return x_out, h_out, s_out
     
 
     @staticmethod

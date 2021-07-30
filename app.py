@@ -11,7 +11,7 @@ from components.slr_list import SLIDER_IND_MAP, SLIDER_LIST
 
 
 from utils.callbacks import retrieve_page, model_callback, toggle_open, toggle_visible, \
-    par_scan_callback, make_sliders_invisible_m, make_sliders_invisible_ps
+    par_scan_callback, make_sliders_invisible_m, make_sliders_invisible_ps, toggle_fig_columns
 
 ########################################################################################################################
 external_stylesheets = [dbc.themes.LITERA]
@@ -77,14 +77,17 @@ app.callback(Output('page-content', 'children'),
 
 
 # toggle open/close menus and navs
-ids = ["nav-menu"] + [f"m-sld-gp-{x}" for x in range(1,6)] + [f"ps-sld-gp-{x}" for x in range(1,6)]
-acts = ["menu-button"] + [f"m-sld-bt-{x}" for x in range(1,6)] + [f"ps-sld-bt-{x}" for x in range(1,6)]
+ids = ["nav-menu"] + [f"m-sld-gp-{x}" for x in range(1,6)] + [f"ps-sld-gp-{x}" for x in range(1,6)] + ["settings-modal"]
+acts = ["menu-button"] + [f"m-sld-bt-{x}" for x in range(1,6)] + [f"ps-sld-bt-{x}" for x in range(1,6)] + ["settings-wrapper"]
 
 for id_name, activator in zip(ids,acts):
     app.callback(Output(id_name, "is_open"),
         [Input(activator, "n_clicks")],
         [State(id_name, "is_open")],
     )(toggle_open)
+
+app.callback([Output("model-fig-wrapper", "className")],
+                [Input("col-choice", "value")])(toggle_fig_columns)
 
 
 # make params invisible
@@ -118,6 +121,7 @@ app.callback(
             ,
             [Input(f"m-persistent-choice", 'value')]
             )(make_sliders_invisible_m)
+
 
 
 # run model

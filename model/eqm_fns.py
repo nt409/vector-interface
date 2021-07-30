@@ -335,9 +335,9 @@ class RootAnalyser:
 
         q = Quartic(p)
 
-        coef = q.coefficients
+        self.coef = q.coefficients
 
-        self.roots = np.roots(coef)
+        self.roots = np.roots(self.coef)
 
 
     def analyse_roots(self):

@@ -52,8 +52,92 @@ model_controls = html.Div([
     ], className="controls")
 
 
+
+col_no_selector = html.Div([
+                html.P("Number of figure columns", className="control-label"),
+                
+                dcc.RadioItems(
+                    id=f"col-choice",
+                    options=[
+                        {'label': ' One column ', 'value': 1},
+                        {'label': ' Two columns ', 'value': 2},
+                    ],
+                    value=1,
+                    labelStyle={'display': 'block'}
+                ),
+        
+            ],
+            )
+
+
 modal = get_modal("m")
 
+settings_modal = html.Div(
+        [
+            dbc.Modal(
+                [
+                    dbc.ModalHeader("Settings"),
+                    dbc.ModalBody(
+                        col_no_selector
+                        ),
+                ],
+                id="settings-modal",
+                is_open=False,
+            ),
+        ],
+        )
+
+
+
+settings_img = html.Div(
+                html.Img(src='/assets/images/settings.svg',
+                    id="settings-icon"),
+                id="settings-wrapper",
+                className="show-desktop"
+                )
+
+
+
+figs = html.Div([
+            #
+                
+                    html.Div([
+                        html.Span(className="emph-line"),
+                        html.H4("host dynamics", className="uppercase-title"),
+                    
+
+                    html.Div(dcc.Graph(id='host-fig',
+                        config = MODEBAR_CONFIG,
+                        className="fig-cont"
+                        )),
+                ]),
+                
+                #
+                html.Div([
+                    html.Span(className="emph-line"),
+                    html.H4("vector dynamics", className="uppercase-title"),
+
+                    html.Div(dcc.Graph(id='vector-fig',
+                        config = MODEBAR_CONFIG,
+                        className="fig-cont"
+                        )),
+                ]),
+
+                #
+                html.Div([
+
+                    html.Span(className="emph-line"),
+                    html.H4("incidence dynamics", className="uppercase-title"),
+
+                    html.Div(dcc.Graph(id='incidence-fig',
+                        config = MODEBAR_CONFIG,
+                        className="fig-cont"
+                        )),
+                ]),
+            ],
+            id="model-fig-wrapper",
+            className="one-col"
+            )
 
 figure_cont = html.Div([
             
@@ -72,32 +156,11 @@ figure_cont = html.Div([
                     className="fig-spinner"
                     ),
 
-            #
-            html.Span(className="emph-line"),
-            html.H4("host dynamics", className="uppercase-title"),
-
-            html.Div(dcc.Graph(id='host-fig',
-                config = MODEBAR_CONFIG,
-                className="fig-cont"
-                )),
+            settings_img,
+                        
             
-            #
-            html.Span(className="emph-line"),
-            html.H4("vector dynamics", className="uppercase-title"),
+            figs,
 
-            html.Div(dcc.Graph(id='vector-fig',
-                config = MODEBAR_CONFIG,
-                className="fig-cont"
-                )),
-            
-            #
-            html.Span(className="emph-line"),
-            html.H4("incidence dynamics", className="uppercase-title"),
-
-            html.Div(dcc.Graph(id='incidence-fig',
-                config = MODEBAR_CONFIG,
-                className="fig-cont"
-                )),
 
             #
             html.Span(className="emph-line"),
@@ -120,6 +183,7 @@ figure_cont = html.Div([
 model_page =  html.Div(
     [
     modal,
+    settings_modal,
 
     html.H1(
         "Model outputs",

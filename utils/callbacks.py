@@ -166,6 +166,14 @@ def toggle_visible(radio):
     else:
         return ["invisible"]
 
+def toggle_fig_columns(value):
+    if value==2:
+        return ["two-cols"]
+    elif value==1:
+        return ["one-col"]
+    else:
+        print(f"value should be 1 or 2 but received: {value}")
+        return ["one-col"]
 
 
 def make_sliders_invisible_m(trans_type):

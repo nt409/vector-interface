@@ -17,7 +17,6 @@ def standard_layout(legend_on):
     return go.Layout(
             font = dict(size=12),
             template="plotly_white",
-            height=440,
             showlegend=legend_on,
             xaxis=dict(showgrid=False),
             margin=dict(l=50, b=10, t=50, r=10, pad=0),
@@ -39,7 +38,9 @@ class ModelRunFigure:
         fig.update_xaxes(title="Time (days)")
         fig.update_yaxes(title=y_lab) # , fixedrange=True)
 
-        fig.update_layout(legend=dict(x=1, 
+        fig.update_layout(
+                height=300,
+                legend=dict(x=1, 
                         y=1,
                         font=dict(size=10),
                         yanchor="bottom",
@@ -187,6 +188,7 @@ class TerminalIncidenceFigure:
 
         fig.update_layout(
                     annotations=annotz,
+                    height=400,
                     legend=dict(x=1, 
                         y=1,
                         font=dict(size=10),

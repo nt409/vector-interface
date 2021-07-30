@@ -89,7 +89,7 @@ settings_modal = html.Div(
 
 
 
-settings_img = html.Div(
+settings_logo = html.Div(
                 html.Img(src='/assets/images/settings.svg',
                     id="settings-icon"),
                 id="settings-wrapper",
@@ -98,7 +98,7 @@ settings_img = html.Div(
 
 
 
-figs = html.Div([
+figs_and_tables = html.Div([
             #
                 
                     html.Div([
@@ -134,10 +134,29 @@ figs = html.Div([
                         className="fig-cont"
                         )),
                 ]),
+
+                #
+                html.Div([
+
+                    #
+                    html.Span(className="emph-line"),
+                    html.H4("Equilibria", className="uppercase-title"),
+                    html.Div(id="eqm-table-cont", className="table-container"),
+                    
+                    #
+                    html.Span(className="emph-line"),
+                    html.H4("Model quantities", className="uppercase-title"),
+                    html.Div(id="R0-k-table-cont", className="table-container"),
+                    
+                ]),
+
+
             ],
             id="model-fig-wrapper",
             className="one-col"
             )
+
+
 
 figure_cont = html.Div([
             
@@ -156,23 +175,9 @@ figure_cont = html.Div([
                     className="fig-spinner"
                     ),
 
-            settings_img,
-                        
+            settings_logo,
             
-            figs,
-
-
-            #
-            html.Span(className="emph-line"),
-            html.H4("Equilibria", className="uppercase-title"),
-            html.Div(id="eqm-table-cont", className="table-container"),
-            
-            #
-            html.Span(className="emph-line"),
-            html.H4("Model quantities", className="uppercase-title"),
-            html.Div(id="R0-k-table-cont", className="table-container"),
-            
-            #
+            figs_and_tables,
 
             ],
             className="figure-cont")

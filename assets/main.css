@@ -211,8 +211,28 @@ p {
 
 .two-cols {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-gap: 30px;
+    grid-gap: 0 30px;
 }
+
+::-webkit-scrollbar {
+    width: 20px;
+    height: 15px;
+}
+    
+::-webkit-scrollbar-track {
+    background: var(--bkgd-light-grey);
+}
+    
+::-webkit-scrollbar-thumb {
+    background-color: var(--primary);
+    border-radius: 20px;
+    border: 4px solid var(--bkgd-light-grey);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+}
+
 
 /* end of UC */
 
@@ -489,7 +509,10 @@ footer {
     display: grid;
 }
 
-
+#eqm-table-cont {
+    width: 100%;
+    overflow-x: auto;
+}
 
 
 
@@ -631,11 +654,11 @@ footer {
 
 }
 
-@media only screen and (min-width: 1500px){
+@media only screen and (min-width: 1600px){
     /* add styles for large desktop */
 
     .wrapper, .header-wrapper, .footer-wrapper {
-        max-width: 1400px;
+        max-width: 1500px;
     }
 
     #explan-page {

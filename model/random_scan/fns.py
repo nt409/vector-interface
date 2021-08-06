@@ -5,7 +5,7 @@ from .pars import RandomParams
 from model.eqm_fns import RootAnalyser
 
 
-def run_random_scan(trans_type, n_runs):
+def run_random_scan(trans_type, n_runs, allow_break=False):
     br = []
     sb = []
     all_params = []
@@ -26,6 +26,9 @@ def run_random_scan(trans_type, n_runs):
 
         br.append(n_BR)
         sb.append(n_SB)
+
+        if allow_break and n_BR==4:
+            break
 
 
 

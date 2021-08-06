@@ -61,35 +61,65 @@ class ParScanData:
 
         self.x_info = x_info
 
-        data = self.get_ps_data()
+        traces = self.get_ps_data()
 
-        self.data = self.ensure_real(data)
+        self.traces = self.ensure_real(traces)
 
 
 
     def get_ps_data(self):
-        
-        df_non_0 = self.get_ps_equilibria_df()
 
+        traces = []
+
+        traces += self.get_traces_dis_free_vec()
+        
+        traces += self.get_traces_dis_free_no_vec()
+
+        # reorder traces
+        traces = [traces[1], traces[3], traces[0], traces[2]]
+
+        traces += self.get_traces_non_0()
+
+        traces += self.get_baseline_trc()
+        
+        return traces
+
+
+    def get_traces_dis_free_vec(self):
         dis_free = self.get_dis_free_df_with_vec()
+        trcs_v = ZeroIncTraces(dis_free, "present").traces
 
-        dis_free_no_vec = self.get_dis_free_df_no_vec()
-
-        n0_df_nN = df_non_0[~df_non_0["stab"].isin([None])]
-
-        gap_fillers = [NonZeroGapFiller(n0_df_nN).data,
-                        JoinGapFiller(n0_df_nN, self.x_info).data]
-
-        df_n_0_s, df_n_0_u = self.incorporate_gap_fillers(gap_fillers, df_non_0)
-        
-        xs_plot = self.get_output_list("x", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
-        host_plot = self.get_output_list("host", dis_free, dis_free_no_vec, df_n_0_s, df_n_0_u)
-        stabs_plot = self.get_stab_output_list()
-
-        return dict(xs=xs_plot,
-                    host_vals=host_plot,
-                    stabs=stabs_plot)
+        return trcs_v
     
+    def get_traces_dis_free_no_vec(self):
+        dis_free_no_vec = self.get_dis_free_df_no_vec()
+        trcs_nv = ZeroIncTraces(dis_free_no_vec, "dies out").traces
+
+        return trcs_nv
+
+
+    def get_traces_non_0(self):
+        df_non_0 = self.get_ps_equilibria_df()
+        n0_df_nN = df_non_0[~df_non_0["stab"].isin([None])]
+        
+        trcs = PositiveIncTraces(n0_df_nN).traces
+    
+        trcs = ConnectedPosToZeroTraces(trcs).traces
+
+        if len(trcs)==2:
+            trcs = ConnectedPosIncTraces(trcs).traces        
+
+        return trcs
+
+    
+    def get_baseline_trc(self):
+        return [dict(x=[self.x_info['value']],
+                    y=[0],
+                    marker=dict(color="red", size=12),
+                    showlegend=True,
+                    name="Baseline value",
+                    mode="markers")]
+
 
 
     # normal eqms
@@ -125,6 +155,7 @@ class ParScanData:
 
         S_list = list(df.S)
         I_list = list(df.I)
+        
         host_term_inc = [I_list[ii]/(S_list[ii] + I_list[ii])
                         for ii in range(len(S_list))]
 
@@ -193,6 +224,8 @@ class ParScanData:
                         host=zero_inc,
                         stab=stabs))
 
+
+
     def update_params(self, p, x):
 
         # the following variables have side effects:
@@ -246,344 +279,369 @@ class ParScanData:
 
 
 
+    def ensure_real(self, data):
+        out = []
+        for trc in data:            
+            trc['x'] = self.get_real_version(list(trc['x']))
+            trc['y'] = self.get_real_version(list(trc['y']))
+            out.append(trc)
 
-    def incorporate_gap_fillers(self, gap_fillers, df_non_0):
-        df_s = df_non_0[df_non_0["stab"].isin([True])]
-        df_u = df_non_0[df_non_0["stab"].isin([False])]
-        
-        hf_s = self.sort_dfs_by_host_first(df_s)
-        hf_u = self.sort_dfs_by_host_first(df_u)
-
-        for gap_flr in gap_fillers:
-            df_s = df_s.append(gap_flr["stable"], ignore_index=True)
-            df_u = df_u.append(gap_flr["unstable"], ignore_index=True)
-
-        df_s_out = self.get_sorted_df(df_s, hf_s)
-        df_u_out = self.get_sorted_df(df_u, hf_u)
-
-        return df_s_out, df_u_out
-
-
-
-    def sort_dfs_by_host_first(self, df):
-        by_h = df.sort_values(by=["host", "x"])
-
-        if not by_h.shape[0]:
-            return True
-        
-        if not self.big_x_jumps(list(by_h.x)):
-            return True
-        else:
-            return False
-
-
-    @staticmethod
-    def big_x_jumps(x):
-        # x was linspaced, so can just check if all jumps same size
-
-        diffs = [abs(x[ii+1] - x[ii]) for ii in range(len(x)-1)]
-
-        if min(diffs)!=max(diffs):
-            return True
-        else:
-            return False
-    
-    
-    @staticmethod
-    def get_sorted_df(df, host_first):
-
-        if host_first:
-            return df.sort_values(by=["host", "x"])
-        else:
-            return df.sort_values(by=["x", "host"])
-
-
-    @staticmethod
-    def get_output_list(key, dis_free, dis_f_nv, df_non_0_s, df_non_0_u):
-        
-        dis_free_s = dis_free[dis_free["stab"].isin([True])]
-        dis_free_u = dis_free[dis_free["stab"].isin([False])]
-        
-        dis_free_nv_s = dis_f_nv[dis_f_nv["stab"].isin([True])]
-        dis_free_nv_u = dis_f_nv[dis_f_nv["stab"].isin([False])]
-
-        return [
-                list(dis_free_u[key]),
-                list(dis_free_nv_u[key]),
-                list(dis_free_s[key]),
-                list(dis_free_nv_s[key]),
-                list(df_non_0_s[key]),
-                list(df_non_0_u[key]),
-                ]
-    
-    @staticmethod
-    def get_stab_output_list():
-        return [
-                False,
-                False,
-                True,
-                True,
-                True,
-                False
-                ]
-
-
-
-    @staticmethod
-    def ensure_real(data):
-        out = {}
-        for key in data.keys():
-            if key=="stabs":
-                out[key] = data[key]
-                continue
-            
-            out[key] = []
-            for list_ in data[key]:
-                if any(np.iscomplex(list_)):
-                    raise Exception(f"List should not be complex {list_}")
-                else:
-                    list_ = np.asarray(list_)
-                    list_ = list_.real
-                    out[key].append(list_)
-                    
         return out
 
 
-
-
-
-def get_empty_gap_fill_dict():
-    return dict(stable=pd.DataFrame(dict(x=[], host=[], stab=[])),
-                    unstable=pd.DataFrame(dict(x=[], host=[], stab=[])))
-
-
-def get_dict_of_dfs(xs, ys, stabs):
-
-    if len(stabs)>2:
-        print("list shouldn't be this longer than 2?")
-    
-    out = get_empty_gap_fill_dict()
-
-    for x, y, stab in zip(xs, ys, stabs):
-        if not x:
-            continue
-
-        if stab:
-            out["stable"] = pd.DataFrame(dict(x=x, host=y, stab=stab))
-        elif not stab:
-            out["unstable"] = pd.DataFrame(dict(x=x, host=y, stab=stab))
-    
-    return out
+    @staticmethod
+    def get_real_version(list_):
+        if any(np.iscomplex(list_)):
+            raise Exception(f"List should not be complex {list_}")
+        else:
+            list_ = np.asarray(list_)
+            return list_.real
 
 
 
 
 
-class JoinGapFiller:
-    def __init__(self, df, x_info) -> None:
+
+
+
+
+
+
+
+
+
+
+
+class ZeroIncTraces:
+    def __init__(self, df, vector_state) -> None:
         self.df = df
-        self.x_info = x_info
-        # dictionary containing single df (ordered by stability)
-        self.data = self.connect_x_axis_to_not(df)
-    
+        self.vector_state = vector_state
+        self.traces = self.get_traces()
 
-    def connect_x_axis_to_not(self, df_in):
-        df = df_in.sort_values(by=["host", "x"])
-
-        y = np.asarray(df["host"])
-
-        if any(np.iscomplex(y)):
-            return get_empty_gap_fill_dict()
-
-        y = np.asarray(y)
-
-        y = y.real
-
-        close_enough = self.eqm_close_enough_to_0(y)
+    def get_traces(self):
+        trcs = []
+        for stab in [True, False]:
+            trc = self.get_output(stab)
+            trcs.append(trc)
         
-        if not close_enough:
-            return get_empty_gap_fill_dict()
+        return trcs
 
 
-        x = list(df.x)
-        stab = list(df.stab)
+    def get_output(self, stable):
+        df = self.df
+        vec_state = self.vector_state
 
+        filt = df[df["stab"].isin([stable])]
 
-        x_join = self.get_x_vals(x, y)
-        host_join = [0, y[0]]
-        stability = stab[0]
-
-
-        if df.shape[0]>=2:
-            x_join.append(x[1])
-            host_join.append(y[1])
-            stability = stab[1]
-
-        # this dict will only contain one df
-        out = get_dict_of_dfs([x_join], [host_join], [stability])
-        return out
+        name = "Stable" if stable is True else "Unstable" 
+        name = name + f" (vect. {vec_state})"
         
+        clr = "rgb(151,251,151)" if stable is not True else "rgb(0,89,0)"
+        dsh = "dash" if vec_state=="present" else "dot"
 
-    def get_x_vals(self, x, y):
-
-        if len(x)>=2:
-            try:
-                m = (y[1] - y[0])/(x[1] - x[0])
-                c = y[0] - m*x[0]
-                x_linear = -c/m
-
-                if x_linear<self.x_info["max"] and x_linear>self.x_info["min"]:
-                    x0 = x_linear
-                else:
-                    # don't use if linear doesn't project to correct region
-                    x0 = None
-
-            except Exception as e:
-                print(f"linear error: {e}")
-                x0 = x[0]
-        else:
-            x0 = x[0]
-
-        return [x0, x[0]]
-
-
-    def eqm_close_enough_to_0(self, z):
-        threshold = max(z)/15
-
-        if min(z)>threshold:
-            # if not very close to 0, then see if it is steep nearby
-            # if not steep, then return False, since likely this eqm never touches 0
-            
-            ind = np.where(z==min(z))[0][0]
-
-            local_threshold = max(z)/50
-
-            # check can look both sides
-            if ind==len(z) and abs(z[ind]-z[ind-1])<local_threshold:
-                return False
-            
-            if ind==0 and abs(z[ind+1]-z[ind])<local_threshold:
-                return False
-
-            if (abs(z[ind]-z[ind-1])<local_threshold and
-                        abs(z[ind+1]-z[ind])<local_threshold):
-                return False
-            
-            return True
-        
-        return True
-            
+        return dict(x=filt['x'],
+                    y=filt['host'], 
+                    name=name, 
+                    line=dict(color=clr, width=3, dash=dsh),
+                    showlegend=True,
+                    mode="lines")
 
 
 
 
-
-
-
-class NonZeroGapFiller:
+class PositiveIncTraces:
     def __init__(self, df) -> None:
         self.df = df
-        # dictionary containing 1 or 2 dfs (ordered by stability)
-        self.data = self.connect_non_axis_points(df)
-    
-    
-    def connect_non_axis_points(self, df_in):
-
-        df = df_in.sort_values(by=["host", "x", "stab"])
-
-        x = np.asarray(df.x)
-        y = np.asarray(df["host"])
-
-        if any(np.iscomplex(y)):
-            return get_empty_gap_fill_dict()
+        self.traces = self.get_traces()
         
-        stop_now_x = self.jumps_are_too_big(x)
-        stop_now_y = self.jumps_are_too_big(y)
-
-        if stop_now_x or stop_now_y:
-            return get_empty_gap_fill_dict()
 
 
-        strd = df_in.sort_values(by=["stab", "host"])
-        df_s = strd[strd.stab.isin([True])]
-        df_u = strd[strd.stab.isin([False])]
+    def get_traces(self):
+        df = self.df
 
-        if not df_s.shape[0] or not df_u.shape[0]:
-            return get_empty_gap_fill_dict()
+        df = df.sort_values(by=["stab", "x", "host"])
 
-        out = self.get_output(df_s, df_u)
-        return get_dict_of_dfs(*out)
+        df_s = self.get_df(df, True)
+        df_u = self.get_df(df, False)
+
+        trcs = []
+        if df_u is not None:
+            trcs += self.get_traces_from_df(df_u)
+        if df_s is not None:
+            trcs += self.get_traces_from_df(df_s)
+
+        traces = self.modify_showlegends(trcs)
+
+        return traces
+
+
 
 
     @staticmethod
-    def jumps_are_too_big(z):
+    def get_df(df_in, stab):
+        df_in = df_in[df_in.stab.isin([stab])]
+
+        if not df_in.shape[0]:
+            return None
+
+        host_vec = np.array(df_in['host'])
+        if any(np.iscomplex(host_vec)):
+            return None
         
-        z = z.real
+        df_in['host'] = host_vec.real
 
-        diffs = [abs(z[ii+1] - z[ii])
-                        for ii in range(len(z)-1)]
+        df_in['rank'] = df_in.groupby(by=["stab", "x"]).rank()
 
-        threshold = max(z)/20
+        return df_in
 
-        if max(diffs)>threshold:
-            # if big jump, check whether it is just steep here
-            # if not steep nearby, then don't join
-            zd = np.asarray(diffs)
-            ind = np.where(zd==max(diffs))[0][0]
 
-            # check can look both sides
-            if ind==len(diffs) and diffs[ind-1]<threshold:
-                return True
+
+    def get_traces_from_df(self, df_in):
+        out = []
+
+        for ii in df_in['rank'].unique():
+            df_use = df_in[df_in['rank']==ii]
+            trc = self.get_trace_from_df(df_use)
             
-            if ind==0 and diffs[ind+1]<threshold:
-                return True
+            if trc is not None:
+                out.append(trc)
 
-            if diffs[ind-1]<threshold and diffs[ind+1]<threshold:
+        return out
+
+
+
+    @staticmethod
+    def modify_showlegends(trcs):
+        stab_count=0
+        unstab_count=0
+
+        for trc in trcs:
+            if trc['name']=="Stable":
+                stab_count += 1
+                if stab_count>1:
+                    trc['showlegend'] = False
+            
+            if trc['name']=="Unstable":
+                unstab_count += 1
+                if unstab_count>1:
+                    trc['showlegend'] = False
+        
+        return trcs
+    
+
+    @staticmethod
+    def get_trace_from_df(df):
+
+        if df.shape[0]:
+            stable = list(df['stab'])[0]
+            
+            name = "Stable" if stable is True else "Unstable"
+            clr = "rgb(151,251,151)" if stable is not True else "rgb(0,89,0)"
+            
+            trc = dict(x=list(df['x']),
+                    y=list(df['host']),
+                    name=name,
+                    showlegend=True,
+                    line=dict(color=clr, width=3, dash="solid"),
+                    mode="lines",
+                    )
+            
+            return trc
+        else: 
+            return None
+
+
+
+
+class ConnectedPosIncTraces:
+    def __init__(self, traces) -> None:
+        self.traces = self.get_traces_without_gaps(traces)
+        
+    
+    
+    def get_traces_without_gaps(self, trcs):
+        trcs_m = self.connect_ends(trcs, "max")
+        joined_traces = self.connect_ends(trcs_m, "min")
+        return joined_traces
+        
+    
+    def connect_ends(self, trcs, min_or_max):
+        x_ms = []
+
+        for trc in trcs:
+            if min_or_max=="max":
+                x_ms.append(max(trc['x']))
+            elif min_or_max=="min":
+                x_ms.append(min(trc['x']))
+        
+        x_ms = np.array(x_ms)
+        unq_xm = np.unique(x_ms)
+
+        trcs = self.join_at_end(trcs, unq_xm, x_ms, min_or_max)
+        return trcs
+
+
+    def join_at_end(self, trcs, unq_xm, x_m, min_or_max):
+        if len(unq_xm)==len(x_m):
+            return trcs
+        
+        for xx in unq_xm:
+            ind = np.where(x_m==xx)[0]
+
+            if len(ind)==2:
+                # then join them up
+                i1 = int(ind[0])
+                i2 = int(ind[1])
+
+                x1 = list(trcs[i1]['x'])
+                x2 = list(trcs[i2]['x'])
+
+                y1 = list(trcs[i1]['y'])
+                y2 = list(trcs[i2]['y'])
+
+                if min(len(x1), len(x2), len(y1), len(y2))<2:
+                    continue
+
+                is_close_enough = self.check_close_enough(y1, y2, min_or_max)
+
+                if not is_close_enough:
+                    continue
+
+                if min_or_max=="max":
+                    yy = 0.5*(y1[-1] + y2[-1])
+
+                    trcs[i1]['x'] = x1 + [xx]
+                    trcs[i1]['y'] = y1 + [yy]
+                    
+                    trcs[i2]['x'] = x2 + [xx]
+                    trcs[i2]['y'] = y2 + [yy]
+
+                elif min_or_max=="min":
+                    yy = 0.5*(y1[0] + y2[0])
+                
+                    trcs[i1]['x'] = [xx] + x1
+                    trcs[i1]['y'] = [yy] + y1
+                    
+                    trcs[i2]['x'] = [xx] + x2
+                    trcs[i2]['y'] = [yy] + y2
+        
+        return trcs
+        
+
+
+    def check_close_enough(self, y1, y2, min_or_max):
+        thresh = 0.1*max(y1+y2)
+        
+        if min_or_max=="max":
+            y1_near = y1[-2]
+            y1_real = y1[-1]
+
+            y2_near = y2[-2]
+            y2_real = y2[-1]
+        else:
+            y1_near = y1[1]
+            y1_real = y1[0]
+
+            y2_near = y2[1]
+            y2_real = y2[0]
+
+
+        if abs(y1_real-y2_real)>thresh:
+            
+            # if far away, see if locally steep in y
+            if (abs(y1_near-y1_real)>0.5*thresh
+                    or abs(y2_near-y2_real)>0.5*thresh):
                 return True
             
             return False
-        
-        return False
 
-
-
-    
-    def get_output(self, df_low, df_high):
-        s_out = [True, False]
-
-        if df_low.shape[0]>=2 and df_high.shape[0]>=2:
-            # joining more points makes it look smooth
-
-            x_out = self.get_vec_out_depth_2(df_low, df_high, "x")
-            h_out = self.get_vec_out_depth_2(df_low, df_high, "host")
-
-            return x_out, h_out, s_out
-        
         else:
-            x_out = self.get_vec_out_depth_1(df_low, df_high, "x")
-            h_out = self.get_vec_out_depth_1(df_low, df_high, "host")
+            return True
 
-            return x_out, h_out, s_out
-    
 
-    @staticmethod
-    def get_vec_out_depth_2(df_low, df_high, key):
-        zL = list(df_low[key])[1]
-        zl = list(df_low[key])[0]
 
-        zh = list(df_high[key])[-1]
-        zH = list(df_high[key])[-2]
-
-        zm = 0.5*(zl + zh)
-
-        return [[zL, zl, zm], [zm, zh, zH]]
-    
-
-    @staticmethod
-    def get_vec_out_depth_1(df_low, df_high, key):
+class ConnectedPosToZeroTraces:
+    def __init__(self, traces) -> None:
         
-        zl = list(df_low[key])[0]
-        zh = list(df_high[key])[-1]
-        zm = 0.5*(zl + zh)
+        self.traces = self.connect_traces_to_0(traces)
+    
+    def connect_traces_to_0(self, traces):
+        for trc in traces:
+            xs = list(trc['x'])
+            ys = list(trc['y'])
 
-        return [[zl, zm], [zm, zh]]
+            if len(xs)<3 or len(ys)<3:
+                continue
+
+            where_close_enough = self.check_y_vals(ys)
+
+            if where_close_enough is None:
+                continue
+            elif where_close_enough=="start":
+                gdt = (ys[1]-ys[0])/(xs[1]-xs[0])
+                c = ys[0] - gdt*xs[0]
+
+                try:
+                    xv = -c/gdt
+                except:
+                    xv = xs[0] - 0.1*(xs[1]-xs[0])
+                
+                if xv<0:
+                    continue
+                
+                trc['x'] = [xv] + xs
+                trc['y'] = [0] + ys
+            elif where_close_enough=="end":
+
+                gdt = (ys[-1]-ys[-2])/(xs[-1]-xs[-2])
+                c = ys[-1] - gdt*xs[-1]
+                
+                try:
+                    xv = -c/gdt
+                except:
+                    xv = xs[-1] + 0.1*(xs[-1]-xs[-2])
+                
+                if xv>1.2*xs[-1]:
+                    continue
+
+                trc['x'] = xs + [xv]
+                trc['y'] = ys + [0]
+        
+        return traces
+
+
+
+    def check_y_vals(self, ys):
+        y0 = ys[0]
+        y1 = ys[1]
+
+        ym2 = ys[-2]
+        ym1 = ys[-1]
+
+        ymax = max(ys)
+
+        if self.check_close_enough(y0, y1, ymax):
+            return "start"
+        
+        if self.check_close_enough(ym1, ym2, ymax):
+            return "end"
+    
+        return None
+
+
+
+    def check_close_enough(self, y0, y1, ymax):
+        thresh = 0.02*ymax
+
+        if abs(y0)>thresh:
+            
+            # if far away, see if locally steep in y
+            if abs(y1-y0)>0.8*thresh:
+                return True
+            
+            return False
+
+        else:
+            return True
+
+

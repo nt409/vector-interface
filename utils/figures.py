@@ -79,11 +79,13 @@ class ModelRunFigure:
 
 
 class TerminalIncidenceFigure:
-    def __init__(self, data, x_info, which_inc) -> None:
+    def __init__(self, traces, x_info, which_inc) -> None:
         
-        self.xs = data["xs"]
-        self.ys = data[f"{which_inc}_vals"]
-        self.stabs = data["stabs"]
+        self.traces = traces
+
+        # self.xs = data["xs"]
+        # self.ys = data[f"{which_inc}_vals"]
+        # self.stabs = data["stabs"]
 
         self.x_info = x_info
 
@@ -94,32 +96,33 @@ class TerminalIncidenceFigure:
 
     def get_term_inc_fig(self):
 
-        clrs = ["rgb(151,251,151)" if ss is not True 
-                    else "rgb(0,89,0)" for ss in self.stabs]
+        # clrs = ["rgb(151,251,151)" if ss is not True 
+        #             else "rgb(0,89,0)" for ss in self.stabs]
         
-        dashes = [
-                "dash",
-                "dot",
-                "dash",
-                "dot",
-                "solid",
-                "solid"
-                ]
+        # dashes = [
+        #         "dash",
+        #         "dot",
+        #         "dash",
+        #         "dot",
+        #         "solid",
+        #         "solid"
+        #         ]
 
-        names = [
-                    "Unstable (vect. present)",
-                    "Unstable (vect. dies out)",
-                    "Stable (vect. present)",
-                    "Stable (vect. dies out)",
-                    "Stable",
-                    "Unstable",
-                    ]
+        # names = [
+        #             "Unstable (vect. present)",
+        #             "Unstable (vect. dies out)",
+        #             "Stable (vect. present)",
+        #             "Stable (vect. dies out)",
+        #             "Stable",
+        #             "Unstable",
+        #             ]
 
-        showledge = self.get_showlegend()
+        # showledge = self.get_showlegend()
         
-        trcs = self.get_traces(clrs, names, showledge, dashes)
+        # trcs = self.get_traces(clrs, names, showledge, dashes)
+        # trcs = self.traces
 
-        fig = go.Figure(data=trcs, layout=standard_layout(True))
+        fig = go.Figure(data=self.traces, layout=standard_layout(True))
         
         fig = self.update_layout(fig)
 
@@ -127,51 +130,51 @@ class TerminalIncidenceFigure:
 
 
 
-    def get_showlegend(self):
+    # def get_showlegend(self):
 
-        showledge = [True]*len(self.xs)
+    #     showledge = [True]*len(self.xs)
 
-        # showledge[0] = False
-        # showledge[2] = False
+    #     # showledge[0] = False
+    #     # showledge[2] = False
 
-        # if not len(self.xs[-1]):
-        #     # showledge[-1] = False
-        #     showledge[0] = True
+    #     # if not len(self.xs[-1]):
+    #     #     # showledge[-1] = False
+    #     #     showledge[0] = True
         
-        # if not len(self.xs[-2]):
-        #     # showledge[-2] = False
-        #     showledge[2] = True
+    #     # if not len(self.xs[-2]):
+    #     #     # showledge[-2] = False
+    #     #     showledge[2] = True
 
-        return showledge
+    #     return showledge
 
 
 
-    def get_traces(self, clrs, names, showledge, dashes):
-        traces = []
+    # def get_traces(self, clrs, names, showledge, dashes):
+    #     traces = []
 
-        for x, y, clr, name, sl, dsh in zip(self.xs, self.ys, clrs, names, showledge, dashes):
+    #     for x, y, clr, name, sl, dsh in zip(self.xs, self.ys, clrs, names, showledge, dashes):
 
-            trc = go.Scatter(x=x,
-                    y=y,
-                    line=dict(color=clr, width=3, dash=dsh),
-                    showlegend=sl,
-                    name=name,
-                    mode="lines")
+    #         trc = go.Scatter(x=x,
+    #                 y=y,
+    #                 line=dict(color=clr, width=3, dash=dsh),
+    #                 showlegend=sl,
+    #                 name=name,
+    #                 mode="lines")
 
-            traces.append(trc)
+    #         traces.append(trc)
         
-        baseline_dot = self.get_baseline_trc()
-        traces.append(baseline_dot)
-        return traces
+    #     baseline_dot = self.get_baseline_trc()
+    #     traces.append(baseline_dot)
+    #     return traces
 
 
-    def get_baseline_trc(self):
-        return go.Scatter(x=[self.x_info['value']],
-                    y=[0],
-                    marker=dict(color="red", size=12),
-                    showlegend=True,
-                    name="Baseline value",
-                    mode="markers")
+    # def get_baseline_trc(self):
+    #     return go.Scatter(x=[self.x_info['value']],
+    #                 y=[0],
+    #                 marker=dict(color="red", size=12),
+    #                 showlegend=True,
+    #                 name="Baseline value",
+    #                 mode="markers")
 
 
 
@@ -207,8 +210,8 @@ class TerminalIncidenceFigure:
         if x_info["low"]=="NA" or x_info["high"]=="NA":
             return []
 
-        all_xs = self.flatten_list_of_lists(self.xs)
-        all_ys = self.flatten_list_of_lists(self.ys)
+        all_xs = self.flatten_list_of_trace_vals("x")
+        all_ys = self.flatten_list_of_trace_vals("y")
         
         xmin = min(all_xs)
         xmax = max(all_xs)
@@ -227,11 +230,12 @@ class TerminalIncidenceFigure:
             ]
 
     
-    @staticmethod
-    def flatten_list_of_lists(lol):
+    
+    def flatten_list_of_trace_vals(self, key):
         out = []
-        for list_ in lol:
-            out.extend(list_)
+        for list_ in self.traces:
+            vals = list_[key]
+            out.extend(vals)
         return out
 
 

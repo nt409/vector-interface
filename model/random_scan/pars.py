@@ -32,7 +32,7 @@ class RandomParams:
         else:
             raise Exception(f"Invalid trans_type: {self.trans_type}")
         
-        self.del_vars()
+        self.del_unused_vars()
 
 
     def check_validity(self):
@@ -70,7 +70,7 @@ class RandomParams:
         self.eta = self.eps_m * self.om_m
 
 
-    def del_vars(self):
+    def del_unused_vars(self):
         delattr(self, "tau-NPT")
         delattr(self, "tau-PT")
         delattr(self, "zeta-NPT")

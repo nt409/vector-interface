@@ -14,6 +14,8 @@ from utils.fns_par_scan import ParScanData, get_ps_var_info, get_var_name_for_sc
 
 from utils.figures import TerminalIncidenceFigure
 
+# from utils.eqm_4 import params_use
+
 
 IM = SLIDER_IND_MAP
 
@@ -92,6 +94,8 @@ def run_model_callback(p, *params):
 
 def par_scan_callback(button, *params):
 
+    # params = params_use
+
     p = get_params(*params[:-2])
 
     if not p.vc.is_valid:
@@ -101,6 +105,9 @@ def par_scan_callback(button, *params):
                 None,
                 None,
                 ]
+    
+
+    # return run_PS_callback(*params)
 
     try:
         return run_PS_callback(*params)
@@ -129,9 +136,9 @@ def run_PS_callback(*params):
 
     pars_use = list(params[:-2]) + [var_use]
     
-    data = ParScanData(x_info, *pars_use).data
+    traces = ParScanData(x_info, *pars_use).traces
 
-    host_fig = TerminalIncidenceFigure(data, x_info, "host").fig
+    host_fig = TerminalIncidenceFigure(traces, x_info, "host").fig
     
     return [False,
             "",

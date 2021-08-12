@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def obtain_frequency(trans_type, n_runs, seed):
-    file_name = f"../df_{trans_type}_n={n_runs}_s={seed}.csv"
+    file_name = f"../csvs/df_{trans_type}_n={n_runs}_s={seed}.csv"
     df = pd.read_csv(file_name)
 
     freqs = []
@@ -16,7 +16,7 @@ def obtain_frequency(trans_type, n_runs, seed):
         freqs.append(100*nn/n_runs)
 
     out = pd.DataFrame(dict(n_roots=list(range(5)), incidence=incidence, frequency=freqs))
-    out.to_csv(f"../freq_df_{trans_type}_n={n_runs}_s={seed}.csv")
+    out.to_csv(f"../csvs/freq_df_{trans_type}_n={n_runs}_s={seed}.csv")
     # return out
 
     

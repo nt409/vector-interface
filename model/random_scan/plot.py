@@ -14,7 +14,7 @@ class QuarticPlot:
     def __init__(self, row) -> None:
         self.row = row
         fig = self.get_plot()
-        fig.write_image(f"../{row.trans_type}_eqm_{row.bio_realistic}_roots.png")
+        fig.write_image(f"../figs/{row.trans_type}_eqm_{row.bio_realistic}_roots.png")
         fig.show()
 
         

@@ -227,6 +227,7 @@ class R0Finder:
         out = (R_PV * R_VP)**(0.5)
         return out
 
+
     def get_RPV(self):
         p = self.params
         kappa = self.kappa
@@ -235,6 +236,7 @@ class R0Finder:
         denom = p.N * p.om_m * p.Gamma * (p.mu + p.rho)
         out = num/denom
         return out
+
 
     def get_RVP(self):
         p = self.params

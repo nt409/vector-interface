@@ -7,20 +7,12 @@ from utils.fns_model import get_host_fig, get_vec_fig
 
 
 def get_first_row(trans_type, n_roots, n_runs, seed):
-    filename = f"../by_n_roots/tt={trans_type}_nroots={n_roots}_nruns={n_runs}_s={seed}.csv"
+    filename = f"../csvs/by_n_roots/tt={trans_type}_nroots={n_roots}_nruns={n_runs}_s={seed}.csv"
     df = pd.read_csv(filename)
     
     if df.shape[0]:
         return df.iloc[0, :]
 
-        # for ii in range(df.shape[0]):
-        #     row = df.iloc[ii, :]
-
-        #     eq = RootAnalyser(row).df
-        #     if sum(eq.is_stable)<2:
-        #         return row
-
-        # raise Exception("no rows with no stability")
     else:
         raise Exception(f"Cannot get first row; df has shape: {df.shape}")
 
@@ -44,12 +36,12 @@ def get_figs(row, ICs):
 
     fig = get_host_fig(soln)
     fig.update_layout(height=400, width=600)
-    fig.write_image(f"../{row.trans_type}_host_eq_plot_{row.bio_realistic}.png")
+    fig.write_image(f"../figs/{row.trans_type}_host_eq_plot_{row.bio_realistic}.png")
     fig.show()
 
     fig = get_vec_fig(soln)
     fig.update_layout(height=400, width=600)
-    fig.write_image(f"../{row.trans_type}_vec_eq_plot_{row.bio_realistic}.png")
+    fig.write_image(f"../figs/{row.trans_type}_vec_eq_plot_{row.bio_realistic}.png")
     fig.show()
 
 

@@ -8,8 +8,8 @@ BOUNDS = [
                 
                 # vector
                 dict(min=0, max=0.6, var='alpha'),
-                dict(min=0.000001, max=0.4, var='sigma'),
-                dict(min=0.01, max=4, var='Gamma'),
+                dict(min=0.001, max=0.4, var='sigma'),
+                dict(min=0.001, max=4, var='Gamma'),
                 dict(min=0, max=1, var='delta'),
                 dict(min=0, max=3, var='beta'),
                 
@@ -28,3 +28,4 @@ BOUNDS = [
                 dict(min=0.001, max=2, var='eps_m'),
                 dict(min=0.001, max=2, var='eps_p'),
                 ]
+                

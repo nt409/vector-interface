@@ -10,7 +10,7 @@ import numpy as np
 from model.eqm_fns import RootAnalyser
 from model.simulator import Simulator
 from utils.fns_model import get_host_fig, get_vec_fig
-from .config import config_use
+from random_scan.run.config import config_use
 
 
 
@@ -24,7 +24,7 @@ def get_grouped_df(n_runs, seed):
     grouped = df.groupby(["trans_type", "kappa_pos", "R0_above_1", "bio_realistic", "stable_BR"])
     out = grouped.first().reset_index()
 
-    out = out.loc[out['bio_realistic']>0]
+    out = out.loc[out['stable_BR']==2]
     
     # out = out[out["kappa_pos"]]
     # out = out.drop("kappa_pos")
@@ -42,39 +42,48 @@ def plot_via_loop(df):
     for ii in range(df.shape[0]):
         row = df.iloc[ii,:]
 
+        print("\n")
+        print(row)
+
         eqbria = RootAnalyser(row).df
 
         print("\n")
         print(eqbria)
 
-        print("\n")
-        print(row)
-
         eqbria = eqbria.loc[(eqbria.bio_realistic)]
 
-        for which_eq in range(eqbria.shape[0]):
-
-            file_str = (f"{n_runs}_{seed}_{row.trans_type}_{row.kappa_pos}_"
-                            + f"{row.R0_above_1}_{row.bio_realistic}_" 
-                            + f"{row.stable_BR}_{which_eq}")
-
-            perturbation = [0,0,0,0]
-
-            ICs = get_ICs(eqbria, which_eq, perturbation)
-
-            soln = get_soln(row, ICs)
-
-            get_figs(soln, file_str)
+        plot_this_row(row, eqbria)
 
 
 
 
+def plot_this_row(row, eqbria):
 
-def get_ICs(eqbria, which_eq, perturbation):
-    S0 = eqbria.iloc[which_eq,0] + perturbation[0]
-    I0 = eqbria.iloc[which_eq,1] + perturbation[1]
-    X0 = eqbria.iloc[which_eq,2] + perturbation[2]
-    Z0 = eqbria.iloc[which_eq,3] + perturbation[3]
+    for eq in range(eqbria.shape[0]):
+
+        file_str = (
+            f"{n_runs}_{seed}_{row.trans_type}_{row.kappa_pos}_"
+            f"{row.R0_above_1}_{int(row.bio_realistic)}_"
+            f"{int(row.stable_BR)}_{eq}"
+            )
+        
+        perturbation = [0,0,0,0]
+
+        ICs = get_ICs(eqbria, eq, perturbation)
+
+        soln = get_soln(row, ICs)
+
+        get_figs(soln, file_str)
+
+
+
+
+
+def get_ICs(eqbria, eq, perturbation):
+    S0 = eqbria.iloc[eq,0] + perturbation[0]
+    I0 = eqbria.iloc[eq,1] + perturbation[1]
+    X0 = eqbria.iloc[eq,2] + perturbation[2]
+    Z0 = eqbria.iloc[eq,3] + perturbation[3]
 
     return [S0, I0, X0, Z0]
 
@@ -111,6 +120,9 @@ if __name__=="__main__":
     seed = config_use['seed']
 
     df = get_grouped_df(n_runs, seed)
+
+    print(df.head(20))
+    exit()
 
     print("\n", df)
 

@@ -25,8 +25,8 @@ conf_small = dict(
 
 # 1M
 conf_4_eq = dict(
-    # n_runs = 1000000,
-    n_runs = 10,
+    n_runs = 1000000,
+    # n_runs = 10,
     delta_beta_case=False
     )
 

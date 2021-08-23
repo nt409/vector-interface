@@ -323,6 +323,7 @@ class Quartic:
 
 class RootAnalyser:
     def __init__(self, params) -> None:
+        
         self.params = params
 
         self.find_roots()
@@ -365,7 +366,7 @@ class RootAnalyser:
         is_sol_list = []
         tols_list = []
         
-        tol = 1e-10
+        tol = 1e-3
         
         for ii in range(len(self.roots)):
             S = self.S_list[ii]

@@ -34,7 +34,7 @@ if __name__=="__main__":
     n_runs = conf['n_runs']
 
     if len(sys.argv)==2:
-        seed = 32 + int(sys.argv[1])
+        seed = 64 + int(sys.argv[1])
         get_4_eq("NPT", n_runs, seed)
     else:
         raise Exception("Supply a random seed argument")

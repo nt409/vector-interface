@@ -24,7 +24,7 @@
 #SBATCH --mem=3420mb
 #! Submit a job array with index values between 0 and 31
 #! NOTE: This must be a range, not a single number (i.e. specifying '32' here would only run one job, with index 32).
-#SBATCH --array=0-9
+#SBATCH --array=10-31
 
 #! This is the partition name. This will request for a node with memGB RAM for each task
 #SBATCH -p skylake,cclake

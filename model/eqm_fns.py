@@ -430,6 +430,7 @@ class RootAnalyser:
     def get_df(self):
         host_inc = [self.I_list[ii]/(self.I_list[ii] + self.S_list[ii]) 
                     for ii in range(len(self.I_list))]
+        
         vec_inc = [self.Z_list[ii]/(self.Z_list[ii] + self.X_list[ii]) 
                     for ii in range(len(self.X_list))]
         

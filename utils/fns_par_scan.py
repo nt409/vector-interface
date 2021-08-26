@@ -102,7 +102,7 @@ class ParScanData:
         df_non_0 = self.get_ps_equilibria_df()
         n0_df_nN = df_non_0[~df_non_0["stab"].isin([None])]
         
-        trcs = PositiveIncTraces(n0_df_nN).traces
+        trcs = PositiveIncidenceTraces(n0_df_nN).traces
     
         trcs = ConnectedPosToZeroTraces(trcs).traces
 
@@ -138,21 +138,23 @@ class ParScanData:
                 host_out += hh
                 xs += [x]*len(stab)
                 stabs += stab
+
             except Exception as e:
-                print("nt error", e)
+                print("get_ps_equilibria_df error", e)
 
                 xs += [x]
                 host_out += [None]
                 stabs += [None]
-        
-        return pd.DataFrame(dict(x=xs,
+
+        out = pd.DataFrame(dict(x=xs,
                                 host=host_out,
                                 stab=stabs))
+        return out
 
 
     def get_terminal_incidence_and_stab(self, p):
         df = self.get_eqm_vals(p)
-
+        
         S_list = list(df.S)
         I_list = list(df.I)
         
@@ -349,7 +351,12 @@ class ZeroIncTraces:
 
 
 
-class PositiveIncTraces:
+class PositiveIncidenceTraces:
+    """
+    Get traces for those equilibria which have positive incidence.
+
+    Expect there to be up to 4 for any particular x, some stable some unstable.
+    """
     def __init__(self, df) -> None:
         self.df = df
         self.traces = self.get_traces()
@@ -359,16 +366,29 @@ class PositiveIncTraces:
     def get_traces(self):
         df = self.df
 
-        df = df.sort_values(by=["stab", "x", "host"])
+        df = df.sort_values(by=["x", "stab", "host"])
 
         df_s = self.get_df(df, True)
         df_u = self.get_df(df, False)
 
+        df_u_list = self.split_if_gaps(df_u)
+        df_s_list = self.split_if_gaps(df_s)
+
+        print(df_u_list)
+        print(df_s_list)
+
+        # exit()
+        
+        
         trcs = []
-        if df_u is not None:
-            trcs += self.get_traces_from_df(df_u)
-        if df_s is not None:
-            trcs += self.get_traces_from_df(df_s)
+
+        for df_un in df_u_list:
+            if df_un is not None:
+                trcs += self.get_traces_from_df(df_un)
+
+        for df_st in df_s_list:
+            if df_st is not None:
+                trcs += self.get_traces_from_df(df_st)
 
         traces = self.modify_showlegends(trcs)
 
@@ -392,7 +412,45 @@ class PositiveIncTraces:
 
         df_in['rank'] = df_in.groupby(by=["stab", "x"]).rank()
 
+        df_in['diffs'] = [0] + [df_in.index[ii+1] - df_in.index[ii] for ii in range(len(df_in.index)-1)]
+
         return df_in
+
+
+
+    @staticmethod
+    def split_if_gaps(df_in):
+        """
+        If there is a gap in the df, split into separate traces.
+
+        Otherwise plotly will join them up even when they shouldn't be.
+        """
+        
+        if df_in is None:
+            return [None]
+
+        gap_inds = df_in.loc[df_in.diffs>4].index
+
+        gap_inds = [0] + list(gap_inds) + [max(list(df_in.index))]
+
+        if len(gap_inds)<=1:
+            return [df_in]
+        
+    
+        out = []
+
+        for ii in range(len(gap_inds)-1):
+            try:
+                df_add = df_in.loc[gap_inds[ii]:gap_inds[ii+1], :]
+                df_add = df_add.iloc[:-1]
+
+                out.append(df_add)
+            except Exception as e:
+                print(f"Split dfs at gaps error: {e}")
+            
+        return out
+
+
 
 
 
@@ -561,9 +619,14 @@ class ConnectedPosIncTraces:
 
 
 class ConnectedPosToZeroTraces:
+    """
+    Connect positive incidence traces to the zero incidence line.
+
+    Uses linear interpolation to find the x value to connect to.
+    """
     def __init__(self, traces) -> None:
-        
         self.traces = self.connect_traces_to_0(traces)
+        
     
     def connect_traces_to_0(self, traces):
         for trc in traces:

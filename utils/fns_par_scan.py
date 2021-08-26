@@ -107,7 +107,7 @@ class ParScanData:
         trcs = ConnectedPosToZeroTraces(trcs).traces
 
         if len(trcs)==2:
-            trcs = ConnectedPosIncTraces(trcs).traces        
+            trcs = ConnectedPosIncTraces(trcs).traces
 
         return trcs
 
@@ -374,12 +374,6 @@ class PositiveIncidenceTraces:
         df_u_list = self.split_if_gaps(df_u)
         df_s_list = self.split_if_gaps(df_s)
 
-        print(df_u_list)
-        print(df_s_list)
-
-        # exit()
-        
-        
         trcs = []
 
         for df_un in df_u_list:
@@ -511,7 +505,16 @@ class PositiveIncidenceTraces:
 
 
 
+
+
+
+
+
 class ConnectedPosIncTraces:
+    """
+    Connect up the stable and unstable positive incidence traces
+    which should be joined.
+    """
     def __init__(self, traces) -> None:
         self.traces = self.get_traces_without_gaps(traces)
         
@@ -618,6 +621,8 @@ class ConnectedPosIncTraces:
 
 
 
+
+
 class ConnectedPosToZeroTraces:
     """
     Connect positive incidence traces to the zero incidence line.
@@ -629,6 +634,7 @@ class ConnectedPosToZeroTraces:
         
     
     def connect_traces_to_0(self, traces):
+
         for trc in traces:
             xs = list(trc['x'])
             ys = list(trc['y'])
@@ -675,18 +681,12 @@ class ConnectedPosToZeroTraces:
 
 
     def check_y_vals(self, ys):
-        y0 = ys[0]
-        y1 = ys[1]
-
-        ym2 = ys[-2]
-        ym1 = ys[-1]
-
         ymax = max(ys)
 
-        if self.check_close_enough(y0, y1, ymax):
+        if self.check_close_enough(ys[0], ys[1], ymax):
             return "start"
         
-        if self.check_close_enough(ym1, ym2, ymax):
+        if self.check_close_enough(ys[-1], ys[-2], ymax):
             return "end"
     
         return None
@@ -699,7 +699,9 @@ class ConnectedPosToZeroTraces:
         if abs(y0)>thresh:
             
             # if far away, see if locally steep in y
-            if abs(y1-y0)>0.8*thresh:
+            # need distance from y1 to y0 to be similar to
+            # 0 and y0
+            if abs(y1-y0) > 0.8*abs(y0):
                 return True
             
             return False

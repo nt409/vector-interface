@@ -107,7 +107,7 @@ def par_scan_callback(button, *params):
                 ]
     
 
-    return run_PS_callback(*params)
+    # return run_PS_callback(*params)
 
     try:
         return run_PS_callback(*params)

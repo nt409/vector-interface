@@ -16,7 +16,7 @@ footer = html.Footer([
         html.Div(
                 html.Div([
                 "An interface to accompany the paper:",
-                html.A("\nEpidemiological and ecological consequences of virus manipulation of host and vector in plant virus transmission\n", className="italic footer-txt", href="/"),
+                html.A("\nEpidemiological and ecological consequences of virus manipulation of host and vector in plant virus transmission\n", className="italic footer-txt", href="https://www.biorxiv.org/content/10.1101/2021.09.08.459452v1.full"),
                 "by Nik J. Cunniffe, Nick P. Taylor, Frédéric M. Hamelin and Michael J. Jeger",
                 ],
                 className="footer-wrapper"),

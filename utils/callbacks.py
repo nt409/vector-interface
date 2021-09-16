@@ -35,7 +35,6 @@ def model_callback(*params):
                 None,
                 None,
                 ]
-    
 
     try:
         return run_model_callback(p, *params)

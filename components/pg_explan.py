@@ -70,7 +70,7 @@ explan_page =  html.Div(
 
     html.Div(
         html.A("Read paper",
-            href="/", 
+            href="https://www.biorxiv.org/content/10.1101/2021.09.08.459452v1.full", 
             className="button-link-text"),
         className="button mrgn-bttm-big"
     ),
